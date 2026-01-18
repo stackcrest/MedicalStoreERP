@@ -1,0 +1,190 @@
+@model List<CommentViewModel>
+@{
+    ViewData["Title"] = "Manage Comments";
+    var articleTitle = ViewBag.ArticleTitle as string ?? "Article";
+    var articleId = ViewBag.ArticleId;
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">
+                    <i class="fas fa-comments me-2"></i>Comments
+                </h1>
+                <small class="text-muted">For: @articleTitle</small>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Articles</a></li>
+                    <li class="breadcrumb-item active">Comments</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h3 class="card-title">
+                                <i class="fas fa-list me-2"></i>All Comments (@Model.Count)
+                            </h3>
+                            <a asp-action="Edit" asp-route-id="@articleId" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-arrow-left me-1"></i>Back to Article
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>Comment</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                            <th width="150">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var comment in Model)
+                                        {
+                                            <tr class="@(comment.IsApproved ? "" : "table-warning")">
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                                                            @comment.Name?.FirstOrDefault()
+                                                        </div>
+                                                        <div>
+                                                            <strong>@comment.Name</strong>
+                                                            <br />
+                                                            <small class="text-muted">@comment.UserEmail</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <p class="mb-0">@comment.Content</p>
+                                                </td>
+                                                <td>
+                                                    <span class="text-muted">
+                                                        @comment.CreatedAt.ToString("MMM dd, yyyy")
+                                                        <br />
+                                                        <small>@comment.CreatedAt.ToString("HH:mm")</small>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    @if (comment.IsApproved)
+                                                    {
+                                                        <span class="badge bg-success">
+                                                            <i class="fas fa-check me-1"></i>Approved
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-warning text-dark">
+                                                            <i class="fas fa-clock me-1"></i>Pending
+                                                        </span>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm">
+                                                        @if (!comment.IsApproved)
+                                                        {
+                                                            <form asp-action="ApproveComment" asp-route-id="@comment.Id" method="post" class="d-inline">
+                                                                @Html.AntiForgeryToken()
+                                                                <button type="submit" class="btn btn-success" title="Approve">
+                                                                    <i class="fas fa-check"></i>
+                                                                </button>
+                                                            </form>
+                                                        }
+                                                        <button type="button" class="btn btn-danger" title="Delete" 
+                                                                onclick="confirmDeleteComment(@comment.Id)">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-5">
+                                <i class="fas fa-comments fa-4x text-muted mb-3"></i>
+                                <h5 class="text-muted">No Comments Yet</h5>
+                                <p class="text-muted">When users comment on this article, they will appear here.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Pending Comments Card -->
+                @{
+                    var pendingComments = Model.Where(c => !c.IsApproved).ToList();
+                }
+                @if (pendingComments.Any())
+                {
+                    <div class="card border-warning">
+                        <div class="card-header bg-warning text-dark">
+                            <h3 class="card-title">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Pending Approval (@pendingComments.Count)
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted">These comments are awaiting your approval before they become visible to other users.</p>
+                            <form asp-action="ApproveAllComments" asp-route-articleId="@articleId" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-check-double me-2"></i>Approve All Pending
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteCommentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Delete Comment</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this comment?</p>
+                <p class="text-danger mb-0">This action cannot be undone!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteCommentForm" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDeleteComment(id) {
+            $('#deleteCommentForm').attr('action', '/Admin/Articles/DeleteComment/' + id);
+            new bootstrap.Modal(document.getElementById('deleteCommentModal')).show();
+        }
+    </script>
+}

@@ -1,0 +1,149 @@
+@model BulkUploadResultViewModel
+@{
+    ViewData["Title"] = "Bulk Upload Results";
+}
+
+<!-- Content Header -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Bulk Upload Results</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-action="Index" asp-controller="Dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Medicines</a></li>
+                    <li class="breadcrumb-item"><a asp-action="BulkUpload">Bulk Upload</a></li>
+                    <li class="breadcrumb-item active">Results</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Summary Cards -->
+        <div class="row">
+            <div class="col-lg-4 col-md-4 col-sm-6">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>@Model.TotalRecords</h3>
+                        <p>Total Records</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-file-excel"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-4 col-sm-6">
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3>@Model.SuccessCount</h3>
+                        <p>Successfully Uploaded</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-4 col-sm-6">
+                <div class="small-box bg-danger">
+                    <div class="inner">
+                        <h3>@Model.FailedCount</h3>
+                        <p>Failed Records</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Status -->
+        <div class="row">
+            <div class="col-12">
+                @if (Model.IsSuccess)
+                {
+                    <div class="alert alert-success">
+                        <h5><i class="icon fas fa-check"></i> Upload Successful!</h5>
+                        All @Model.SuccessCount medicine(s) have been uploaded successfully.
+                    </div>
+                }
+                else if (Model.SuccessCount > 0 && Model.FailedCount > 0)
+                {
+                    <div class="alert alert-warning">
+                        <h5><i class="icon fas fa-exclamation-triangle"></i> Partial Success</h5>
+                        @Model.SuccessCount medicine(s) uploaded successfully. @Model.FailedCount record(s) failed. See details below.
+                    </div>
+                }
+                else if (Model.FailedCount > 0)
+                {
+                    <div class="alert alert-danger">
+                        <h5><i class="icon fas fa-ban"></i> Upload Failed</h5>
+                        All records failed to upload. Please check the errors below and try again.
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Error Details -->
+        @if (Model.Errors.Any())
+        {
+            <div class="card card-danger">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Error Details (@Model.Errors.Count errors)
+                    </h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body table-responsive p-0">
+                    <table class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th width="80">Row #</th>
+                                <th>Medicine Name</th>
+                                <th>Error Message</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var error in Model.Errors)
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-secondary">Row @error.RowNumber</span>
+                                    </td>
+                                    <td>@error.MedicineName</td>
+                                    <td class="text-danger">
+                                        <i class="fas fa-exclamation-circle me-1"></i>
+                                        @error.ErrorMessage
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+
+        <!-- Action Buttons -->
+        <div class="card">
+            <div class="card-body">
+                <a asp-action="Index" class="btn btn-primary">
+                    <i class="fas fa-pills me-2"></i>View All Medicines
+                </a>
+                <a asp-action="BulkUpload" class="btn btn-success ms-2">
+                    <i class="fas fa-upload me-2"></i>Upload More
+                </a>
+                <a asp-action="DownloadTemplate" class="btn btn-info ms-2">
+                    <i class="fas fa-download me-2"></i>Download Template
+                </a>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,347 @@
+@model ArticleCreateViewModel
+@{
+    ViewData["Title"] = Model.Id == 0 ? "Create Article" : "Edit Article";
+    var categories = ViewBag.Categories as List<string> ?? new List<string>();
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">
+                    <i class="fas fa-edit me-2"></i>@ViewData["Title"]
+                </h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Articles</a></li>
+                    <li class="breadcrumb-item active">@ViewData["Title"]</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <form asp-action="@(Model.Id == 0 ? "Create" : "Edit")" method="post" id="articleForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" name="linksJson" id="linksJson" />
+
+            <div class="row">
+                <!-- Main Content -->
+                <div class="col-lg-9">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Article Content</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label asp-for="Title" class="form-label">Title <span class="text-danger">*</span></label>
+                                <input asp-for="Title" class="form-control form-control-lg" placeholder="Enter article title" />
+                                <span asp-validation-for="Title" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Summary" class="form-label">Summary <span class="text-danger">*</span></label>
+                                <textarea asp-for="Summary" class="form-control" rows="3" placeholder="Brief summary of the article (shown in listings)"></textarea>
+                                <span asp-validation-for="Summary" class="text-danger"></span>
+                                <small class="text-muted">Max 500 characters. This appears in article listings.</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Content" class="form-label">Content <span class="text-danger">*</span></label>
+                                <textarea asp-for="Content" class="form-control" id="contentEditor" rows="15"></textarea>
+                                <span asp-validation-for="Content" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Tags" class="form-label">Tags</label>
+                                <input asp-for="Tags" class="form-control" placeholder="health, prevention, tips (comma-separated)" />
+                                <small class="text-muted">Comma-separated tags for better discoverability</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Media Section -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-photo-video me-2"></i>Media</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label asp-for="FeaturedImageUrl" class="form-label">Featured Image URL</label>
+                                        <div class="input-group">
+                                            <input asp-for="FeaturedImageUrl" class="form-control" placeholder="https://..." id="featuredImageUrl" />
+                                            <label class="input-group-text btn btn-outline-secondary" style="cursor: pointer;">
+                                                <i class="fas fa-upload"></i>
+                                                <input type="file" class="d-none" id="imageUpload" accept="image/*" onchange="uploadImage(this)">
+                                            </label>
+                                        </div>
+                                        <div id="imagePreview" class="mt-2">
+                                            @if (!string.IsNullOrEmpty(Model.FeaturedImageUrl))
+                                            {
+                                                <img src="@Model.FeaturedImageUrl" class="img-thumbnail" style="max-height: 150px;">
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label asp-for="VideoUrl" class="form-label">Video URL (YouTube/Video Link)</label>
+                                        <input asp-for="VideoUrl" class="form-control" placeholder="https://youtube.com/..." />
+                                        <small class="text-muted">Supports YouTube and direct video links</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- External Links Section -->
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h3 class="card-title"><i class="fas fa-link me-2"></i>References & External Links</h3>
+                            <button type="button" class="btn btn-sm btn-primary" onclick="addLink()">
+                                <i class="fas fa-plus me-1"></i>Add Link
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="linksContainer">
+                                <!-- Links will be added here dynamically -->
+                            </div>
+                            <div id="noLinksMessage" class="text-center text-muted py-3">
+                                <i class="fas fa-link fa-2x mb-2"></i>
+                                <p>No external links added. Click "Add Link" to add references.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-lg-3">
+                    <!-- Publish Settings -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Publish</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check form-switch mb-3">
+                                <input asp-for="IsPublished" class="form-check-input" type="checkbox" id="isPublished">
+                                <label class="form-check-label" for="isPublished">
+                                    <strong>Publish Article</strong>
+                                </label>
+                                <div class="small text-muted">Make article visible to users</div>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input asp-for="IsFeatured" class="form-check-input" type="checkbox" id="isFeatured">
+                                <label class="form-check-label" for="isFeatured">
+                                    <strong>Featured Article</strong>
+                                </label>
+                                <div class="small text-muted">Show in featured section</div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-success w-100 mb-2">
+                                <i class="fas fa-save me-2"></i>Save Article
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Category -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Category</h3>
+                        </div>
+                        <div class="card-body">
+                            <select asp-for="Category" class="form-select">
+                                @foreach (var cat in categories)
+                                {
+                                    <option value="@cat">@cat</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- SEO -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">SEO Settings</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label asp-for="MetaDescription" class="form-label">Meta Description</label>
+                                <textarea asp-for="MetaDescription" class="form-control" rows="3" placeholder="SEO description (auto-generated from summary if empty)"></textarea>
+                                <small class="text-muted">Max 160 characters recommended</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Help -->
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6><i class="fas fa-lightbulb text-warning me-2"></i>Tips</h6>
+                            <ul class="small mb-0">
+                                <li>Use clear, descriptive titles</li>
+                                <li>Add relevant tags for better searchability</li>
+                                <li>Include images for better engagement</li>
+                                <li>Link to credible sources</li>
+                                <li>Keep paragraphs short and readable</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+<!-- Link Template (Hidden) -->
+<template id="linkTemplate">
+    <div class="link-item border rounded p-3 mb-2">
+        <div class="row g-2">
+            <div class="col-md-5">
+                <input type="text" class="form-control link-title" placeholder="Link Title">
+            </div>
+            <div class="col-md-4">
+                <input type="url" class="form-control link-url" placeholder="https://...">
+            </div>
+            <div class="col-md-2">
+                <select class="form-select link-type">
+                    <option value="link">Link</option>
+                    <option value="video">Video</option>
+                    <option value="pdf">PDF</option>
+                    <option value="image">Image</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="removeLink(this)">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</template>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <!-- Include a WYSIWYG editor - using simple textarea with formatting for now -->
+    <script>
+        var links = [];
+
+        $(document).ready(function() {
+            // Load existing links
+            var existingLinks = '@Html.Raw(Model.ExternalLinks ?? "[]")';
+            try {
+                links = JSON.parse(existingLinks);
+                if (links.length > 0) {
+                    links.forEach(function(link) {
+                        addLinkRow(link);
+                    });
+                    updateLinksVisibility();
+                }
+            } catch (e) {
+                links = [];
+            }
+
+            // Preview image on URL change
+            $('#featuredImageUrl').on('change blur', function() {
+                var url = $(this).val();
+                if (url) {
+                    $('#imagePreview').html('<img src="' + url + '" class="img-thumbnail" style="max-height: 150px;" onerror="this.style.display=\'none\'">');
+                } else {
+                    $('#imagePreview').empty();
+                }
+            });
+
+            // Form submission - serialize links
+            $('#articleForm').on('submit', function() {
+                collectLinks();
+                $('#linksJson').val(JSON.stringify(links));
+            });
+        });
+
+        function addLink() {
+            addLinkRow({});
+            updateLinksVisibility();
+        }
+
+        function addLinkRow(link) {
+            var template = document.getElementById('linkTemplate').innerHTML;
+            var $row = $(template);
+            
+            if (link.title) $row.find('.link-title').val(link.title);
+            if (link.url) $row.find('.link-url').val(link.url);
+            if (link.type) $row.find('.link-type').val(link.type);
+            
+            $('#linksContainer').append($row);
+        }
+
+        function removeLink(btn) {
+            $(btn).closest('.link-item').remove();
+            updateLinksVisibility();
+        }
+
+        function collectLinks() {
+            links = [];
+            $('.link-item').each(function() {
+                var title = $(this).find('.link-title').val();
+                var url = $(this).find('.link-url').val();
+                var type = $(this).find('.link-type').val();
+                
+                if (title && url) {
+                    links.push({ title: title, url: url, type: type });
+                }
+            });
+        }
+
+        function updateLinksVisibility() {
+            if ($('.link-item').length > 0) {
+                $('#noLinksMessage').hide();
+            } else {
+                $('#noLinksMessage').show();
+            }
+        }
+
+        function uploadImage(input) {
+            if (input.files && input.files[0]) {
+                var formData = new FormData();
+                formData.append('file', input.files[0]);
+
+                $.ajax({
+                    url: '/Admin/Articles/UploadImage',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.success) {
+                            $('#featuredImageUrl').val(response.url);
+                            $('#imagePreview').html('<img src="' + response.url + '" class="img-thumbnail" style="max-height: 150px;">');
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Upload failed');
+                    }
+                });
+            }
+        }
+    </script>
+
+    <style>
+        #contentEditor {
+            font-family: 'Segoe UI', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+    </style>
+}

@@ -1,0 +1,345 @@
+@model MedicalStoreERP.Models.ViewModels.SettingsEditViewModel
+@{
+    ViewData["Title"] = $"Edit {Model.GroupDisplayName}";
+    Layout = "~/Areas/SuperAdmin/Views/Shared/_Layout.cshtml";
+}
+
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1><i class="fas fa-edit me-2"></i>@Model.GroupDisplayName</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-action="Index" asp-controller="Dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Settings</a></li>
+                    <li class="breadcrumb-item active">@Model.Group</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show">
+                <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show">
+                <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <form asp-action="Edit" asp-route-group="@Model.Group" method="post" enctype="multipart/form-data">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">@Model.GroupDisplayName</h5>
+                        <div>
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-arrow-left me-1"></i>Back
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="fas fa-save me-1"></i>Save All Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        @for (int i = 0; i < Model.Settings.Count; i++)
+                        {
+                            var setting = Model.Settings[i];
+                            <div class="col-md-@(setting.SettingType == "Html" ? "12" : "6") mb-4">
+                                <input type="hidden" name="Settings[@i].Id" value="@setting.Id" />
+                                <input type="hidden" name="Settings[@i].Key" value="@setting.Key" />
+                                
+                                <label class="form-label fw-bold">
+                                    @FormatSettingKey(setting.Key)
+                                    @if (!setting.IsEditable)
+                                    {
+                                        <span class="badge bg-warning ms-1">Read Only</span>
+                                    }
+                                </label>
+                                
+                                @if (setting.SettingType == "Color")
+                                {
+                                    <div class="input-group">
+                                        <input type="color" class="form-control form-control-color" 
+                                               id="color_@setting.Key" value="@(setting.Value ?? "#000000")"
+                                               onchange="document.getElementById('text_@setting.Key').value = this.value">
+                                        <input type="text" class="form-control" 
+                                               id="text_@setting.Key" name="Settings[@i].Value" 
+                                               value="@setting.Value" placeholder="#000000"
+                                               onchange="document.getElementById('color_@setting.Key').value = this.value"
+                                               @(setting.IsEditable ? "" : "readonly")>
+                                    </div>
+                                }
+                                else if (setting.SettingType == "Boolean")
+                                {
+                                    <div class="form-check form-switch">
+                                        <input type="hidden" name="Settings[@i].Value" id="bool_@setting.Key" value="@(setting.Value?.ToLower() ?? "false")">
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                               id="switch_@setting.Key"
+                                               @(setting.Value?.ToLower() == "true" ? "checked" : "")
+                                               onchange="document.getElementById('bool_@setting.Key').value = this.checked ? 'true' : 'false'"
+                                               @(setting.IsEditable ? "" : "disabled")>
+                                        <label class="form-check-label" for="switch_@setting.Key">
+                                            @(setting.Value?.ToLower() == "true" ? "Enabled" : "Disabled")
+                                        </label>
+                                    </div>
+                                }
+                                else if (setting.SettingType == "Image")
+                                {
+                                    <div class="input-group mb-2">
+                                        <input type="text" class="form-control" name="Settings[@i].Value" 
+                                               id="img_@setting.Key" value="@setting.Value" placeholder="Image URL"
+                                               @(setting.IsEditable ? "" : "readonly")>
+                                        <button type="button" class="btn btn-outline-secondary" 
+                                                onclick="document.getElementById('file_@setting.Key').click()">
+                                            <i class="fas fa-upload"></i>
+                                        </button>
+                                    </div>
+                                    <input type="file" id="file_@setting.Key" class="d-none" accept="image/*"
+                                           onchange="uploadImage('@setting.Key', this)">
+                                    @if (!string.IsNullOrEmpty(setting.Value))
+                                    {
+                                        <div class="mt-2">
+                                            <img src="@setting.Value" alt="Preview" class="img-thumbnail" 
+                                                 style="max-width: 150px; max-height: 100px;" id="preview_@setting.Key">
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="mt-2">
+                                            <img src="#" alt="Preview" class="img-thumbnail d-none" 
+                                                 style="max-width: 150px; max-height: 100px;" id="preview_@setting.Key">
+                                        </div>
+                                    }
+                                }
+                                else if (setting.SettingType == "Html")
+                                {
+                                    <textarea class="form-control" name="Settings[@i].Value" rows="6"
+                                              id="html_@setting.Key" @(setting.IsEditable ? "" : "readonly")>@setting.Value</textarea>
+                                    <small class="text-muted">HTML content is supported</small>
+                                }
+                                else if (setting.Key.Contains("Address") || setting.Key.Contains("Content") || setting.Key.Contains("Description") || setting.Key.Contains("Message"))
+                                {
+                                    <textarea class="form-control" name="Settings[@i].Value" rows="3"
+                                              @(setting.IsEditable ? "" : "readonly")>@setting.Value</textarea>
+                                }
+                                else
+                                {
+                                    <input type="text" class="form-control" name="Settings[@i].Value" 
+                                           value="@setting.Value" @(setting.IsEditable ? "" : "readonly")>
+                                }
+                                
+                                @if (!string.IsNullOrEmpty(setting.Description))
+                                {
+                                    <small class="text-muted">@setting.Description</small>
+                                }
+                                
+                                @if (setting.UpdatedAt.HasValue)
+                                {
+                                    <br><small class="text-muted">
+                                        <i class="fas fa-clock me-1"></i>Updated: @setting.UpdatedAt?.ToString("MMM dd, yyyy HH:mm")
+                                        @if (!string.IsNullOrEmpty(setting.UpdatedByName))
+                                        {
+                                            <text>by @setting.UpdatedByName</text>
+                                        }
+                                    </small>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to All Settings
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        @if (Model.Group == "Map")
+        {
+            <!-- Map Preview -->
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-map me-2"></i>Store Location Preview</h5>
+                </div>
+                <div class="card-body">
+                    <div id="mapPreview" style="height: 400px; border-radius: 8px;"></div>
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="updateMapFromInputs()">
+                            <i class="fas fa-sync me-1"></i>Update Preview
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="getLocationFromMap()">
+                            <i class="fas fa-map-marker-alt me-1"></i>Click Map to Set Location
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Upload image function
+        async function uploadImage(key, input) {
+            if (!input.files || !input.files[0]) return;
+
+            const formData = new FormData();
+            formData.append('key', key);
+            formData.append('imageFile', input.files[0]);
+
+            try {
+                const response = await fetch('@Url.Action("UploadImage")', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('img_' + key).value = result.imageUrl;
+                    const preview = document.getElementById('preview_' + key);
+                    preview.src = result.imageUrl;
+                    preview.classList.remove('d-none');
+                    alert('Image uploaded successfully!');
+                } else {
+                    alert(result.message || 'Error uploading image');
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                alert('Error uploading image');
+            }
+        }
+
+        // Boolean switch label update
+        document.querySelectorAll('.form-check-input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const label = this.nextElementSibling;
+                label.textContent = this.checked ? 'Enabled' : 'Disabled';
+            });
+        });
+    </script>
+
+    @if (Model.Group == "Map")
+    {
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script>
+            let map, marker, circle;
+            
+            document.addEventListener('DOMContentLoaded', function() {
+                initMapPreview();
+            });
+
+            function initMapPreview() {
+                const latInput = document.querySelector('input[name$="Value"][id*="StoreLatitude"]') || 
+                                 Array.from(document.querySelectorAll('input')).find(i => i.value && i.name.includes('Value') && i.closest('.col-md-6')?.textContent.includes('Latitude'));
+                const lngInput = document.querySelector('input[name$="Value"][id*="StoreLongitude"]') ||
+                                 Array.from(document.querySelectorAll('input')).find(i => i.value && i.name.includes('Value') && i.closest('.col-md-6')?.textContent.includes('Longitude'));
+                const radiusInput = Array.from(document.querySelectorAll('input')).find(i => i.name.includes('Value') && i.closest('.col-md-6')?.textContent.includes('Radius'));
+
+                const lat = latInput ? parseFloat(latInput.value) || 19.0760 : 19.0760;
+                const lng = lngInput ? parseFloat(lngInput.value) || 72.8777 : 72.8777;
+                const radius = radiusInput ? parseFloat(radiusInput.value) || 10 : 10;
+
+                map = L.map('mapPreview').setView([lat, lng], 13);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+
+                marker = L.marker([lat, lng], { draggable: true }).addTo(map)
+                    .bindPopup('Store Location').openPopup();
+
+                circle = L.circle([lat, lng], {
+                    color: '#28a745',
+                    fillColor: '#28a745',
+                    fillOpacity: 0.1,
+                    radius: radius * 1000
+                }).addTo(map);
+
+                marker.on('dragend', function(e) {
+                    const pos = e.target.getLatLng();
+                    updateCoordinateInputs(pos.lat, pos.lng);
+                    circle.setLatLng(pos);
+                });
+
+                map.on('click', function(e) {
+                    marker.setLatLng(e.latlng);
+                    circle.setLatLng(e.latlng);
+                    updateCoordinateInputs(e.latlng.lat, e.latlng.lng);
+                });
+            }
+
+            function updateCoordinateInputs(lat, lng) {
+                const inputs = document.querySelectorAll('input[name$="Value"]');
+                inputs.forEach(input => {
+                    const container = input.closest('.col-md-6');
+                    if (container) {
+                        const label = container.querySelector('label');
+                        if (label && label.textContent.includes('Latitude')) {
+                            input.value = lat.toFixed(7);
+                        } else if (label && label.textContent.includes('Longitude')) {
+                            input.value = lng.toFixed(7);
+                        }
+                    }
+                });
+            }
+
+            function updateMapFromInputs() {
+                const inputs = document.querySelectorAll('input[name$="Value"]');
+                let lat = 19.0760, lng = 72.8777, radius = 10;
+                
+                inputs.forEach(input => {
+                    const container = input.closest('.col-md-6');
+                    if (container) {
+                        const label = container.querySelector('label');
+                        if (label) {
+                            if (label.textContent.includes('Latitude')) lat = parseFloat(input.value) || lat;
+                            else if (label.textContent.includes('Longitude')) lng = parseFloat(input.value) || lng;
+                            else if (label.textContent.includes('Radius')) radius = parseFloat(input.value) || radius;
+                        }
+                    }
+                });
+
+                map.setView([lat, lng], 13);
+                marker.setLatLng([lat, lng]);
+                circle.setLatLng([lat, lng]);
+                circle.setRadius(radius * 1000);
+            }
+
+            function getLocationFromMap() {
+                alert('Click anywhere on the map to set the store location. You can also drag the marker.');
+            }
+        </script>
+    }
+}
+
+@functions {
+    string FormatSettingKey(string key)
+    {
+        return System.Text.RegularExpressions.Regex.Replace(key, "([a-z])([A-Z])", "$1 $2");
+    }
+}

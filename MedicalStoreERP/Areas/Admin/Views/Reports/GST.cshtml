@@ -1,0 +1,249 @@
+@model SalesReportViewModel
+@{
+    ViewData["Title"] = "GST Report";
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">GST Report</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item active">GST Report</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Filter Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-filter me-2"></i>Filter Options</h3>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label">From Date</label>
+                        <input type="date" name="fromDate" class="form-control" value="@ViewBag.FromDate">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">To Date</label>
+                        <input type="date" name="toDate" class="form-control" value="@ViewBag.ToDate">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">GST Rate</label>
+                        <select name="gstRate" class="form-select">
+                            <option value="">All Rates</option>
+                            <option value="0">0%</option>
+                            <option value="5">5%</option>
+                            <option value="12">12%</option>
+                            <option value="18">18%</option>
+                            <option value="28">28%</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Generate
+                        </button>
+                        <a asp-action="ExportGSTReport" asp-route-fromDate="@ViewBag.FromDate" 
+                           asp-route-toDate="@ViewBag.ToDate" class="btn btn-success">
+                            <i class="fas fa-file-excel me-2"></i>Export
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- GST Summary Cards -->
+        @{
+            var totalTaxable = Model.TotalSales - Model.TotalGST;
+            var cgst = Model.TotalGST / 2;
+            var sgst = Model.TotalGST / 2;
+        }
+        <div class="row">
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>₹@totalTaxable.ToString("N0")</h3>
+                        <p>Total Taxable Value</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-rupee-sign"></i></div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3>₹@cgst.ToString("N0")</h3>
+                        <p>Total CGST</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-file-invoice"></i></div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3>₹@sgst.ToString("N0")</h3>
+                        <p>Total SGST</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-file-invoice"></i></div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-primary">
+                    <div class="inner">
+                        <h3>₹@Model.TotalGST.ToString("N0")</h3>
+                        <p>Total GST</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-calculator"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GST by Rate -->
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-chart-pie me-2"></i>GST Collection by Rate</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="rateChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-table me-2"></i>Rate-wise Summary</h3>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>GST Rate</th>
+                                    <th class="text-end">Taxable Value</th>
+                                    <th class="text-end">CGST</th>
+                                    <th class="text-end">SGST</th>
+                                    <th class="text-end">Total GST</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>All Rates</strong></td>
+                                    <td class="text-end">₹@totalTaxable.ToString("N2")</td>
+                                    <td class="text-end">₹@cgst.ToString("N2")</td>
+                                    <td class="text-end">₹@sgst.ToString("N2")</td>
+                                    <td class="text-end"><strong>₹@Model.TotalGST.ToString("N2")</strong></td>
+                                </tr>
+                                <tr class="table-primary">
+                                    <td><strong>Total</strong></td>
+                                    <td class="text-end"><strong>₹@totalTaxable.ToString("N2")</strong></td>
+                                    <td class="text-end"><strong>₹@cgst.ToString("N2")</strong></td>
+                                    <td class="text-end"><strong>₹@sgst.ToString("N2")</strong></td>
+                                    <td class="text-end"><strong>₹@Model.TotalGST.ToString("N2")</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoice Details -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-list me-2"></i>Invoice-wise GST Details</h3>
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-striped" id="gstTable">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th class="text-end">Taxable Value</th>
+                            <th class="text-end">CGST</th>
+                            <th class="text-end">SGST</th>
+                            <th class="text-end">Total GST</th>
+                            <th class="text-end">Invoice Total</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Orders?.Any() == true)
+                        {
+                            @foreach (var order in Model.Orders)
+                            {
+                                var orderCgst = order.GSTAmount / 2;
+                                var orderSgst = order.GSTAmount / 2;
+                                <tr>
+                                    <td><strong>@order.OrderNumber</strong></td>
+                                    <td>@order.OrderDate.ToString("dd MMM yyyy")</td>
+                                    <td>@order.CustomerName</td>
+                                    <td class="text-end">₹@order.SubTotal.ToString("N2")</td>
+                                    <td class="text-end">₹@orderCgst.ToString("N2")</td>
+                                    <td class="text-end">₹@orderSgst.ToString("N2")</td>
+                                    <td class="text-end"><strong>₹@order.GSTAmount.ToString("N2")</strong></td>
+                                    <td class="text-end"><strong>₹@order.TotalAmount.ToString("N2")</strong></td>
+                                    <td>
+                                        <a asp-controller="Orders" asp-action="PrintInvoice" asp-route-id="@order.Id" 
+                                           class="btn btn-outline-primary btn-sm" target="_blank">
+                                            <i class="fas fa-print"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="3"><strong>Total</strong></td>
+                            <td class="text-end"><strong>₹@totalTaxable.ToString("N2")</strong></td>
+                            <td class="text-end"><strong>₹@cgst.ToString("N2")</strong></td>
+                            <td class="text-end"><strong>₹@sgst.ToString("N2")</strong></td>
+                            <td class="text-end"><strong>₹@Model.TotalGST.ToString("N2")</strong></td>
+                            <td class="text-end"><strong>₹@Model.TotalSales.ToString("N2")</strong></td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Rate Chart
+        var rateCtx = document.getElementById('rateChart').getContext('2d');
+        new Chart(rateCtx, {
+            type: 'pie',
+            data: {
+                labels: ['CGST', 'SGST'],
+                datasets: [{
+                    data: [@(Model.TotalGST / 2), @(Model.TotalGST / 2)],
+                    backgroundColor: ['#28a745', '#007bff']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'right' } }
+            }
+        });
+
+        // Initialize DataTable
+        $(document).ready(function() {
+            $('#gstTable').DataTable({
+                order: [[1, 'desc']],
+                pageLength: 25
+            });
+        });
+    </script>
+}

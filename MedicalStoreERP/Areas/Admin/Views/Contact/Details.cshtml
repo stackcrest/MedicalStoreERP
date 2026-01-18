@@ -1,0 +1,231 @@
+@model MedicalStoreERP.Models.ContactMessage
+@{
+    ViewData["Title"] = "Message Details";
+    
+    var statusClass = Model.Status switch
+    {
+        MedicalStoreERP.Models.ContactStatus.New => "bg-info",
+        MedicalStoreERP.Models.ContactStatus.InProgress => "bg-warning",
+        MedicalStoreERP.Models.ContactStatus.Resolved => "bg-success",
+        MedicalStoreERP.Models.ContactStatus.Closed => "bg-secondary",
+        _ => "bg-secondary"
+    };
+}
+
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1><i class="fas fa-envelope-open me-2"></i>Message #@Model.Id</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-action="Index" asp-controller="Dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Contact Messages</a></li>
+                    <li class="breadcrumb-item active">Details</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Message Details -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="card-title">@Model.Subject</h3>
+                        <span class="badge @statusClass">@Model.Status</span>
+                    </div>
+                    <div class="card-body">
+                        <!-- Sender Info -->
+                        <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3"
+                                 style="width: 50px; height: 50px;">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h5 class="mb-0">
+                                    @Model.Name
+                                    @if (Model.UserId != null)
+                                    {
+                                        <span class="badge bg-primary ms-2">Registered User</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary ms-2">Guest</span>
+                                    }
+                                </h5>
+                                <small class="text-muted">
+                                    <a href="mailto:@Model.Email">@Model.Email</a>
+                                    @if (!string.IsNullOrEmpty(Model.Phone))
+                                    {
+                                        <text> | </text><a href="tel:@Model.Phone">@Model.Phone</a>
+                                    }
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted">
+                                    <i class="far fa-clock me-1"></i>@Model.CreatedAt.ToString("MMM dd, yyyy HH:mm")
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Message Content -->
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-2">
+                                <i class="fas fa-tag me-1"></i>Category: 
+                                <span class="badge bg-secondary">@Model.Category</span>
+                            </h6>
+                            <div class="bg-light p-4 rounded">
+                                <p class="mb-0" style="white-space: pre-wrap;">@Model.Message</p>
+                            </div>
+                        </div>
+
+                        @if (Model.OrderId.HasValue)
+                        {
+                            <div class="alert alert-info">
+                                <i class="fas fa-box me-2"></i>
+                                <strong>Related Order:</strong> 
+                                <a asp-action="Details" asp-controller="Orders" asp-route-id="@Model.OrderId">
+                                    Order #@Model.OrderId
+                                </a>
+                            </div>
+                        }
+
+                        <!-- Admin Response Section -->
+                        @if (!string.IsNullOrEmpty(Model.AdminResponse))
+                        {
+                            <div class="mt-4 pt-3 border-top">
+                                <h6 class="text-muted mb-3">
+                                    <i class="fas fa-reply me-1"></i>Admin Response
+                                </h6>
+                                <div class="bg-success bg-opacity-10 p-4 rounded border-start border-success border-4">
+                                    <p class="mb-2" style="white-space: pre-wrap;">@Model.AdminResponse</p>
+                                    <small class="text-muted">
+                                        Responded by @(Model.RespondedByUser?.FullName ?? "Admin") 
+                                        on @Model.RespondedAt?.ToString("MMM dd, yyyy HH:mm")
+                                    </small>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <!-- Response Form -->
+                            <div class="mt-4 pt-3 border-top">
+                                <h6 class="text-muted mb-3">
+                                    <i class="fas fa-reply me-1"></i>Send Response
+                                </h6>
+                                <form asp-action="Respond" method="post">
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    @Html.AntiForgeryToken()
+                                    <div class="mb-3">
+                                        <textarea name="response" class="form-control" rows="5" 
+                                                  placeholder="Type your response here..." required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-paper-plane me-1"></i>Send Response
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar Actions -->
+            <div class="col-lg-4">
+                <!-- Status Update -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-cog me-2"></i>Update Status</h3>
+                    </div>
+                    <div class="card-body">
+                        <form asp-action="UpdateStatus" method="post">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            @Html.AntiForgeryToken()
+                            <div class="mb-3">
+                                <label class="form-label">Current Status</label>
+                                <select name="status" class="form-select" 
+                                        asp-items="Html.GetEnumSelectList<MedicalStoreERP.Models.ContactStatus>()"
+                                        asp-for="Status">
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-save me-1"></i>Update Status
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Quick Info -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-info-circle me-2"></i>Information</h3>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm table-borderless mb-0">
+                            <tr>
+                                <td class="text-muted">Message ID</td>
+                                <td class="text-end">#@Model.Id</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Category</td>
+                                <td class="text-end">@Model.Category</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Status</td>
+                                <td class="text-end"><span class="badge @statusClass">@Model.Status</span></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Received</td>
+                                <td class="text-end">@Model.CreatedAt.ToString("MMM dd, yyyy")</td>
+                            </tr>
+                            @if (Model.UpdatedAt.HasValue)
+                            {
+                                <tr>
+                                    <td class="text-muted">Last Updated</td>
+                                    <td class="text-end">@Model.UpdatedAt?.ToString("MMM dd, yyyy")</td>
+                                </tr>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.IpAddress))
+                            {
+                                <tr>
+                                    <td class="text-muted">IP Address</td>
+                                    <td class="text-end"><small>@Model.IpAddress</small></td>
+                                </tr>
+                            }
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-bolt me-2"></i>Quick Actions</h3>
+                    </div>
+                    <div class="card-body">
+                        <a href="mailto:@Model.Email?subject=Re: @Model.Subject" class="btn btn-outline-primary w-100 mb-2">
+                            <i class="fas fa-envelope me-1"></i>Send Email
+                        </a>
+                        @if (!string.IsNullOrEmpty(Model.Phone))
+                        {
+                            <a href="tel:@Model.Phone" class="btn btn-outline-success w-100 mb-2">
+                                <i class="fas fa-phone me-1"></i>Call Customer
+                            </a>
+                            <a href="https://wa.me/@Model.Phone.Replace(" ", "").Replace("-", "").Replace("+", "")" 
+                               target="_blank" class="btn btn-outline-success w-100 mb-2">
+                                <i class="fab fa-whatsapp me-1"></i>WhatsApp
+                            </a>
+                        }
+                        <a asp-action="Index" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-arrow-left me-1"></i>Back to List
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

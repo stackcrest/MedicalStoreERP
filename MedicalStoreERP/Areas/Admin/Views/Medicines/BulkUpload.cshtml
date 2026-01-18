@@ -1,0 +1,211 @@
+@model BulkUploadViewModel
+@{
+    ViewData["Title"] = "Bulk Upload Medicines";
+}
+
+<!-- Content Header -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Bulk Upload Medicines</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-action="Index" asp-controller="Dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Medicines</a></li>
+                    <li class="breadcrumb-item active">Bulk Upload</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-8">
+                <!-- Upload Form Card -->
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-file-excel me-2"></i>Upload Excel File
+                        </h3>
+                    </div>
+                    <form asp-action="BulkUpload" method="post" enctype="multipart/form-data">
+                        <div class="card-body">
+                            @if (!ViewData.ModelState.IsValid)
+                            {
+                                <div class="alert alert-danger">
+                                    <ul class="mb-0">
+                                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                        {
+                                            <li>@error.ErrorMessage</li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Important:</strong> Please download and use the template file to ensure correct data format.
+                            </div>
+
+                            <div class="mb-4">
+                                <a asp-action="DownloadTemplate" class="btn btn-success btn-lg">
+                                    <i class="fas fa-download me-2"></i>Download Excel Template
+                                </a>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="ExcelFile" class="form-label">Select Excel File</label>
+                                <div class="custom-file-upload">
+                                    <input type="file" asp-for="ExcelFile" class="form-control" 
+                                           accept=".xlsx,.xls" id="excelFileInput" />
+                                    <span asp-validation-for="ExcelFile" class="text-danger"></span>
+                                </div>
+                                <small class="form-text text-muted">
+                                    Supported formats: .xlsx, .xls (Maximum file size: 10MB)
+                                </small>
+                            </div>
+
+                            <div id="filePreview" class="mt-3" style="display: none;">
+                                <div class="alert alert-secondary">
+                                    <i class="fas fa-file-excel me-2 text-success"></i>
+                                    <span id="selectedFileName"></span>
+                                    <span id="selectedFileSize" class="text-muted ms-2"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary" id="uploadBtn">
+                                <i class="fas fa-upload me-2"></i>Upload & Process
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary ms-2">
+                                <i class="fas fa-arrow-left me-2"></i>Back to List
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <!-- Instructions Card -->
+                <div class="card card-info">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-question-circle me-2"></i>Instructions
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <ol class="mb-0">
+                            <li class="mb-2">Download the Excel template using the button on the left.</li>
+                            <li class="mb-2">Fill in the medicine data following the format in the template.</li>
+                            <li class="mb-2">Fields marked with <strong>*</strong> are mandatory.</li>
+                            <li class="mb-2">Ensure <strong>CategoryName</strong> matches an existing category exactly.</li>
+                            <li class="mb-2">Use date format: <strong>DD/MM/YYYY</strong></li>
+                            <li class="mb-2">Delete the sample row before uploading.</li>
+                            <li class="mb-2">Upload the completed file using the form.</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- Available Categories Card -->
+                <div class="card card-secondary">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-tags me-2"></i>Available Categories
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        @{
+                            var categories = ViewBag.Categories as List<CategoryViewModel>;
+                        }
+                        @if (categories != null && categories.Any())
+                        {
+                            <ul class="list-unstyled mb-0">
+                                @foreach (var category in categories)
+                                {
+                                    <li class="mb-1">
+                                        <i class="fas fa-check-circle text-success me-1"></i>
+                                        @category.Name
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+
+                <!-- Excel Format Card -->
+                <div class="card card-warning">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-columns me-2"></i>Excel Columns
+                        </h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-sm table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Column</th>
+                                    <th>Required</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Name</td><td><span class="badge bg-danger">Yes</span></td></tr>
+                                <tr><td>GenericName</td><td><span class="badge bg-danger">Yes</span></td></tr>
+                                <tr><td>CategoryName</td><td><span class="badge bg-danger">Yes</span></td></tr>
+                                <tr><td>BatchNo</td><td><span class="badge bg-danger">Yes</span></td></tr>
+                                <tr><td>ManufactureDate</td><td><span class="badge bg-danger">Yes</span></td></tr>
+                                <tr><td>ExpiryDate</td><td><span class="badge bg-danger">Yes</span></td></tr>
+                                <tr><td>MRP</td><td><span class="badge bg-danger">Yes</span></td></tr>
+                                <tr><td>SalePrice</td><td><span class="badge bg-danger">Yes</span></td></tr>
+                                <tr><td>PurchasePrice</td><td><span class="badge bg-danger">Yes</span></td></tr>
+                                <tr><td>StockQty</td><td><span class="badge bg-danger">Yes</span></td></tr>
+                                <tr><td>ReorderLevel</td><td><span class="badge bg-secondary">No</span></td></tr>
+                                <tr><td>HSNCode</td><td><span class="badge bg-danger">Yes</span></td></tr>
+                                <tr><td>GSTPercent</td><td><span class="badge bg-danger">Yes</span></td></tr>
+                                <tr><td>Manufacturer</td><td><span class="badge bg-secondary">No</span></td></tr>
+                                <tr><td>Composition</td><td><span class="badge bg-secondary">No</span></td></tr>
+                                <tr><td>Dosage</td><td><span class="badge bg-secondary">No</span></td></tr>
+                                <tr><td>PackSize</td><td><span class="badge bg-secondary">No</span></td></tr>
+                                <tr><td>Description</td><td><span class="badge bg-secondary">No</span></td></tr>
+                                <tr><td>RequiresPrescription</td><td><span class="badge bg-secondary">No</span></td></tr>
+                                <tr><td>IsActive</td><td><span class="badge bg-secondary">No</span></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        document.getElementById('excelFileInput').addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (file) {
+                document.getElementById('selectedFileName').textContent = file.name;
+                document.getElementById('selectedFileSize').textContent = '(' + formatFileSize(file.size) + ')';
+                document.getElementById('filePreview').style.display = 'block';
+            } else {
+                document.getElementById('filePreview').style.display = 'none';
+            }
+        });
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        document.querySelector('form').addEventListener('submit', function() {
+            var btn = document.getElementById('uploadBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+            btn.disabled = true;
+        });
+    </script>
+}

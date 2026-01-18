@@ -1,0 +1,358 @@
+@model SuperAdminDashboardViewModel
+@{
+    ViewData["Title"] = "SuperAdmin Dashboard";
+}
+
+<!-- Content Header -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">
+                    <i class="fas fa-crown text-warning me-2"></i>SuperAdmin Dashboard
+                </h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item active">Dashboard</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Sales Overview -->
+        <div class="row">
+            <div class="col-lg-3 col-md-6">
+                <div class="small-box stats-card purple">
+                    <div class="inner">
+                        <h3>₹@Model.TodaySales.ToString("N0")</h3>
+                        <p>Today's Sales</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-rupee-sign"></i>
+                    </div>
+                    <a href="#salesSection" class="small-box-footer">
+                        @Model.TodayOrders Orders <i class="fas fa-arrow-circle-down"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="small-box stats-card indigo">
+                    <div class="inner">
+                        <h3>₹@Model.WeeklySales.ToString("N0")</h3>
+                        <p>Weekly Sales</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-calendar-week"></i>
+                    </div>
+                    <a href="#salesSection" class="small-box-footer">
+                        @Model.WeeklyOrders Orders <i class="fas fa-arrow-circle-down"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="small-box stats-card green">
+                    <div class="inner">
+                        <h3>₹@Model.MonthlySales.ToString("N0")</h3>
+                        <p>Monthly Sales</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <a href="#salesSection" class="small-box-footer">
+                        @Model.MonthlyOrders Orders <i class="fas fa-arrow-circle-down"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="small-box stats-card yellow">
+                    <div class="inner">
+                        <h3>₹@Model.YearlySales.ToString("N0")</h3>
+                        <p>Yearly Sales</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <a href="#salesSection" class="small-box-footer">
+                        @Model.YearlyOrders Orders <i class="fas fa-arrow-circle-down"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Commission Overview -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-outline card-purple">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-percentage me-2"></i>Commission Overview
+                            <span class="badge bg-warning text-dark ms-2">Rate: @Model.CurrentCommissionRate%</span>
+                        </h3>
+                        <div class="card-tools">
+                            <a asp-controller="Commission" asp-action="Index" class="btn btn-sm btn-primary">
+                                <i class="fas fa-cog me-1"></i>Manage Commission
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 col-sm-6 border-right">
+                                <div class="description-block">
+                                    <span class="description-percentage text-success">
+                                        <i class="fas fa-caret-up"></i> Today
+                                    </span>
+                                    <h5 class="description-header">₹@Model.TodayCommission.ToString("N2")</h5>
+                                    <span class="description-text">TODAY'S COMMISSION</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6 border-right">
+                                <div class="description-block">
+                                    <span class="description-percentage text-info">
+                                        <i class="fas fa-caret-up"></i> Week
+                                    </span>
+                                    <h5 class="description-header">₹@Model.WeeklyCommission.ToString("N2")</h5>
+                                    <span class="description-text">WEEKLY COMMISSION</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6 border-right">
+                                <div class="description-block">
+                                    <span class="description-percentage text-primary">
+                                        <i class="fas fa-caret-up"></i> Month
+                                    </span>
+                                    <h5 class="description-header">₹@Model.MonthlyCommission.ToString("N2")</h5>
+                                    <span class="description-text">MONTHLY COMMISSION</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <div class="description-block">
+                                    <span class="description-percentage text-warning">
+                                        <i class="fas fa-caret-up"></i> Year
+                                    </span>
+                                    <h5 class="description-header">₹@Model.YearlyCommission.ToString("N2")</h5>
+                                    <span class="description-text">YEARLY COMMISSION</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer text-center">
+                        <a asp-controller="Commission" asp-action="Reports" class="btn btn-outline-primary">
+                            <i class="fas fa-chart-pie me-1"></i>View Detailed Commission Reports
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Statistics -->
+        <div class="row">
+            <div class="col-lg-3 col-md-6">
+                <div class="info-box">
+                    <span class="info-box-icon bg-purple elevation-1"><i class="fas fa-users"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Total Users</span>
+                        <span class="info-box-number">@Model.TotalUsers</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="info-box">
+                    <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-user-shield"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Total Admins</span>
+                        <span class="info-box-number">@Model.TotalAdmins</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="info-box">
+                    <span class="info-box-icon bg-info elevation-1"><i class="fas fa-user"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Total Customers</span>
+                        <span class="info-box-number">@Model.TotalCustomers</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="info-box">
+                    <span class="info-box-icon bg-success elevation-1"><i class="fas fa-user-check"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Active Users</span>
+                        <span class="info-box-number">@Model.ActiveUsers</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="row" id="salesSection">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-area me-2"></i>Daily Sales (Last 30 Days)
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="dailySalesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-bar me-2"></i>Monthly Sales (Last 12 Months)
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="monthlySalesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-shopping-cart me-2"></i>Recent Orders
+                        </h3>
+                        <div class="card-tools">
+                            <a asp-area="Admin" asp-controller="Orders" asp-action="Index" class="btn btn-sm btn-primary">
+                                View All Orders
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Customer</th>
+                                    <th>Amount</th>
+                                    <th>Commission (@Model.CurrentCommissionRate%)</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var order in Model.RecentOrders)
+                                {
+                                    var commission = order.TotalAmount * (Model.CurrentCommissionRate / 100);
+                                    <tr>
+                                        <td><code>@order.OrderNumber</code></td>
+                                        <td>@order.CustomerName</td>
+                                        <td>₹@order.TotalAmount.ToString("N2")</td>
+                                        <td class="text-success">₹@commission.ToString("N2")</td>
+                                        <td>
+                                            @{
+                                                var statusClass = order.Status switch
+                                                {
+                                                    "Pending" => "bg-warning",
+                                                    "Confirmed" or "Processing" => "bg-info",
+                                                    "Shipped" => "bg-primary",
+                                                    "Delivered" => "bg-success",
+                                                    "Cancelled" => "bg-danger",
+                                                    _ => "bg-secondary"
+                                                };
+                                            }
+                                            <span class="badge @statusClass">@order.Status</span>
+                                        </td>
+                                        <td>@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Daily Sales Chart
+        var dailyCtx = document.getElementById('dailySalesChart').getContext('2d');
+        var dailySalesChart = new Chart(dailyCtx, {
+            type: 'line',
+            data: {
+                labels: [@Html.Raw(string.Join(",", Model.DailySalesData.Select(d => $"'{d.Label}'")))],
+                datasets: [{
+                    label: 'Sales (₹)',
+                    data: [@string.Join(",", Model.DailySalesData.Select(d => d.Value))],
+                    borderColor: '#7c3aed',
+                    backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '₹' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Monthly Sales Chart
+        var monthlyCtx = document.getElementById('monthlySalesChart').getContext('2d');
+        var monthlySalesChart = new Chart(monthlyCtx, {
+            type: 'bar',
+            data: {
+                labels: [@Html.Raw(string.Join(",", Model.MonthlySalesData.Select(d => $"'{d.Label}'")))],
+                datasets: [{
+                    label: 'Sales (₹)',
+                    data: [@string.Join(",", Model.MonthlySalesData.Select(d => d.Value))],
+                    backgroundColor: [
+                        '#7c3aed', '#8b5cf6', '#a78bfa', '#c4b5fd',
+                        '#7c3aed', '#8b5cf6', '#a78bfa', '#c4b5fd',
+                        '#7c3aed', '#8b5cf6', '#a78bfa', '#c4b5fd'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '₹' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+}

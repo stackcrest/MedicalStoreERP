@@ -1,0 +1,219 @@
+@model GRN
+@{
+    ViewData["Title"] = "GRN Details";
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">GRN Details</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">GRN</a></li>
+                    <li class="breadcrumb-item active">Details</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- GRN Info Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-file-alt me-2"></i>
+                            GRN #@Model.GRNNumber
+                        </h3>
+                        <div class="card-tools">
+                            <a asp-action="Print" asp-route-id="@Model.Id" class="btn btn-outline-primary btn-sm" target="_blank">
+                                <i class="fas fa-print me-1"></i>Print
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-borderless table-sm">
+                                    <tr>
+                                        <td><strong>GRN Number:</strong></td>
+                                        <td>@Model.GRNNumber</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Supplier Invoice No:</strong></td>
+                                        <td>@Model.SupplierInvoiceNo</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>GRN Date:</strong></td>
+                                        <td>@Model.GRNDate.ToString("dd MMM yyyy")</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-borderless table-sm">
+                                    <tr>
+                                        <td><strong>Supplier:</strong></td>
+                                        <td>@Model.Supplier?.Name</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Created By:</strong></td>
+                                        <td>@Model.CreatedBy</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Created On:</strong></td>
+                                        <td>@Model.CreatedAt.ToString("dd MMM yyyy hh:mm tt")</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.Notes))
+                        {
+                            <div class="alert alert-info mt-3 mb-0">
+                                <strong><i class="fas fa-sticky-note me-2"></i>Notes:</strong> @Model.Notes
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Items Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-list me-2"></i>Items (@Model.Items.Count)</h3>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Medicine</th>
+                                    <th>Batch #</th>
+                                    <th>Expiry</th>
+                                    <th class="text-center">Qty</th>
+                                    <th class="text-end">Purchase Price</th>
+                                    <th class="text-end">MRP</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    var sno = 0;
+                                    var grandTotal = 0m;
+                                }
+                                @foreach (var item in Model.Items)
+                                {
+                                    sno++;
+                                    var total = item.Quantity * item.PurchasePrice;
+                                    grandTotal += total;
+                                    <tr>
+                                        <td>@sno</td>
+                                        <td>
+                                            <strong>@item.Medicine?.Name</strong><br>
+                                            <small class="text-muted">@item.Medicine?.GenericName</small>
+                                        </td>
+                                        <td>@item.BatchNo</td>
+                                        <td>
+                                            @{
+                                                var isExpiringSoon = item.ExpiryDate <= DateTime.Today.AddMonths(3);
+                                                var isExpired = item.ExpiryDate <= DateTime.Today;
+                                            }
+                                            <span class="badge @(isExpired ? "bg-danger" : isExpiringSoon ? "bg-warning text-dark" : "bg-success")">
+                                                @item.ExpiryDate.ToString("MMM yyyy")
+                                            </span>
+                                        </td>
+                                        <td class="text-center">@item.Quantity</td>
+                                        <td class="text-end">₹@item.PurchasePrice.ToString("N2")</td>
+                                        <td class="text-end">₹@item.MRP.ToString("N2")</td>
+                                        <td class="text-end"><strong>₹@total.ToString("N2")</strong></td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="4" class="text-end"><strong>Total Items:</strong></td>
+                                    <td class="text-center"><strong>@Model.Items.Sum(i => i.Quantity)</strong></td>
+                                    <td colspan="2" class="text-end"><strong>Grand Total:</strong></td>
+                                    <td class="text-end"><strong class="text-primary fs-5">₹@grandTotal.ToString("N2")</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <!-- Supplier Card -->
+                <div class="card">
+                    <div class="card-header bg-primary">
+                        <h3 class="card-title text-white"><i class="fas fa-truck me-2"></i>Supplier Info</h3>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.Supplier != null)
+                        {
+                            <h5>@Model.Supplier.Name</h5>
+                            <p class="text-muted mb-2">@Model.Supplier.ContactPerson</p>
+                            <p class="mb-1">
+                                <i class="fas fa-phone me-2 text-muted"></i>@Model.Supplier.Phone
+                            </p>
+                            @if (!string.IsNullOrEmpty(Model.Supplier.Email))
+                            {
+                                <p class="mb-1">
+                                    <i class="fas fa-envelope me-2 text-muted"></i>@Model.Supplier.Email
+                                </p>
+                            }
+                            <p class="mb-1">
+                                <i class="fas fa-map-marker-alt me-2 text-muted"></i>@Model.Supplier.City
+                            </p>
+                            @if (!string.IsNullOrEmpty(Model.Supplier.GSTIN))
+                            {
+                                <p class="mb-0">
+                                    <i class="fas fa-file-invoice me-2 text-muted"></i>GST: @Model.Supplier.GSTIN
+                                </p>
+                            }
+                        }
+                    </div>
+                </div>
+
+                <!-- Summary Card -->
+                <div class="card">
+                    <div class="card-header bg-success">
+                        <h3 class="card-title text-white"><i class="fas fa-calculator me-2"></i>Summary</h3>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless mb-0">
+                            <tr>
+                                <td>Total Items:</td>
+                                <td class="text-end"><strong>@Model.Items.Count</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Total Quantity:</td>
+                                <td class="text-end"><strong>@Model.Items.Sum(i => i.Quantity)</strong></td>
+                            </tr>
+                            <tr class="border-top">
+                                <td><strong>Total Amount:</strong></td>
+                                <td class="text-end"><strong class="text-success fs-5">₹@grandTotal.ToString("N2")</strong></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Actions Card -->
+                <div class="card">
+                    <div class="card-body">
+                        <a asp-action="Print" asp-route-id="@Model.Id" class="btn btn-outline-primary w-100 mb-2" target="_blank">
+                            <i class="fas fa-print me-2"></i>Print GRN
+                        </a>
+                        <a asp-action="Index" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-arrow-left me-2"></i>Back to List
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

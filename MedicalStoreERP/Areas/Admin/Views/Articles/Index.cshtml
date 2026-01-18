@@ -1,0 +1,247 @@
+@model PaginatedResult<ArticleViewModel>
+@{
+    ViewData["Title"] = "Manage Articles";
+    var categories = ViewBag.Categories as List<string> ?? new List<string>();
+    var pendingComments = ViewBag.PendingComments as int? ?? 0;
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">
+                    <i class="fas fa-newspaper me-2"></i>Manage Articles
+                </h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Articles</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Action Buttons -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Write New Article
+                </a>
+                <a asp-action="Comments" class="btn btn-warning position-relative ms-2">
+                    <i class="fas fa-comments me-2"></i>Pending Comments
+                    @if (pendingComments > 0)
+                    {
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            @pendingComments
+                        </span>
+                    }
+                </a>
+            </div>
+            <div class="col-md-6">
+                <form asp-action="Index" method="get" class="d-flex justify-content-end gap-2">
+                    <select name="category" class="form-select" style="width: 200px;">
+                        <option value="">All Categories</option>
+                        @foreach (var cat in categories)
+                        {
+                            <option value="@cat" selected="@(ViewBag.Category == cat)">@cat</option>
+                        }
+                    </select>
+                    <input type="text" name="search" class="form-control" style="width: 200px;" placeholder="Search..." value="@ViewBag.Search">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Articles Table -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">All Articles (@Model.TotalCount)</h3>
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th width="50">ID</th>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Author</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Featured</th>
+                            <th class="text-center">Views</th>
+                            <th class="text-center">Comments</th>
+                            <th>Created</th>
+                            <th width="150">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Items.Any())
+                        {
+                            @foreach (var article in Model.Items)
+                            {
+                                <tr>
+                                    <td>@article.Id</td>
+                                    <td>
+                                        <strong>@article.Title</strong>
+                                        <br>
+                                        <small class="text-muted">@article.Slug</small>
+                                    </td>
+                                    <td><span class="badge bg-info">@article.Category</span></td>
+                                    <td>@article.AuthorName</td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm @(article.IsPublished ? "btn-success" : "btn-secondary")"
+                                                onclick="togglePublish(@(article.Id), this)">
+                                            @if (article.IsPublished)
+                                            {
+                                                <i class="fas fa-check"></i> <span>Published</span>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-eye-slash"></i> <span>Draft</span>
+                                            }
+                                        </button>
+                                    </td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm @(article.IsFeatured ? "btn-warning" : "btn-outline-warning")"
+                                                onclick="toggleFeatured(@(article.Id), this)">
+                                            <i class="fas fa-star"></i>
+                                        </button>
+                                    </td>
+                                    <td class="text-center">@article.ViewCount</td>
+                                    <td class="text-center">@article.CommentCount</td>
+                                    <td>
+                                        @article.CreatedAt.ToString("dd MMM yyyy")
+                                        @if (article.PublishedAt.HasValue)
+                                        {
+                                            <br><small class="text-success">Published: @article.PublishedAt.Value.ToString("dd MMM")</small>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a asp-action="Details" asp-route-id="@article.Id" class="btn btn-info" title="View">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@article.Id" class="btn btn-primary" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-danger" onclick="confirmDelete(@article.Id)" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="10" class="text-center py-4">
+                                    <i class="fas fa-newspaper fa-3x text-muted mb-3 d-block"></i>
+                                    <p class="text-muted">No articles found. Start writing!</p>
+                                    <a asp-action="Create" class="btn btn-primary">
+                                        <i class="fas fa-plus me-2"></i>Create First Article
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if (Model.TotalPages > 1)
+            {
+                <div class="card-footer">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center mb-0">
+                            <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                                <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)" asp-route-search="@ViewBag.Search" asp-route-category="@ViewBag.Category">
+                                    Previous
+                                </a>
+                            </li>
+                            @for (int i = 1; i <= Model.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                    <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-search="@ViewBag.Search" asp-route-category="@ViewBag.Category">@i</a>
+                                </li>
+                            }
+                            <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+                                <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)" asp-route-search="@ViewBag.Search" asp-route-category="@ViewBag.Category">
+                                    Next
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this article? This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function togglePublish(id, btn) {
+            $.post('/Admin/Articles/TogglePublish/' + id, function(response) {
+                if (response.success) {
+                    if (response.isPublished) {
+                        $(btn).removeClass('btn-secondary').addClass('btn-success');
+                        $(btn).html('<i class="fas fa-check"></i> Published');
+                    } else {
+                        $(btn).removeClass('btn-success').addClass('btn-secondary');
+                        $(btn).html('<i class="fas fa-eye-slash"></i> Draft');
+                    }
+                    showToast(response.message, 'success');
+                }
+            });
+        }
+
+        function toggleFeatured(id, btn) {
+            $.post('/Admin/Articles/ToggleFeatured/' + id, function(response) {
+                if (response.success) {
+                    if (response.isFeatured) {
+                        $(btn).removeClass('btn-outline-warning').addClass('btn-warning');
+                    } else {
+                        $(btn).removeClass('btn-warning').addClass('btn-outline-warning');
+                    }
+                    showToast(response.message, 'success');
+                }
+            });
+        }
+
+        function confirmDelete(id) {
+            $('#deleteForm').attr('action', '/Admin/Articles/Delete/' + id);
+            $('#deleteModal').modal('show');
+        }
+
+        function showToast(message, type) {
+            alert(message);
+        }
+    </script>
+}

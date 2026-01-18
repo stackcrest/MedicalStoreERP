@@ -1,0 +1,325 @@
+@inject MedicalStoreERP.Services.IAppSettingsService AppSettings
+@{
+    ViewData["Title"] = "Home";
+    var settings = AppSettings.GetCachedSettings();
+}
+
+<!-- Hero Section -->
+<section class="hero-section" @if(!string.IsNullOrEmpty(settings.HeroBannerImage) && settings.HeroBannerImage != "/images/hero-banner.jpg") { <text>style="background-image: url('@settings.HeroBannerImage'); background-size: cover; background-position: center;"</text> }>
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">@settings.HeroBannerTitle</h1>
+                <p class="lead mb-4">@settings.HeroBannerSubtitle</p>
+                <div class="d-flex gap-3">
+                    <a asp-controller="Shop" asp-action="Index" class="btn btn-light btn-lg">
+                        <i class="fas fa-shopping-cart me-2"></i>Shop Now
+                    </a>
+                    <a href="#categories" class="btn btn-outline-light btn-lg">
+                        Browse Categories
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block text-center">
+                <img src="https://via.placeholder.com/500x400?text=Medical+Store" alt="Medical Store" 
+                     class="img-fluid rounded-3 shadow">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-3 col-6">
+                <div class="text-center">
+                    <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                         style="width: 70px; height: 70px;">
+                        <i class="fas fa-truck text-primary fa-2x"></i>
+                    </div>
+                    <h6 class="fw-bold">Free Delivery</h6>
+                    <small class="text-muted">On orders above ₹500</small>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="text-center">
+                    <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                         style="width: 70px; height: 70px;">
+                        <i class="fas fa-shield-alt text-success fa-2x"></i>
+                    </div>
+                    <h6 class="fw-bold">100% Authentic</h6>
+                    <small class="text-muted">Genuine medicines only</small>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="text-center">
+                    <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                         style="width: 70px; height: 70px;">
+                        <i class="fas fa-percent text-warning fa-2x"></i>
+                    </div>
+                    <h6 class="fw-bold">Best Prices</h6>
+                    <small class="text-muted">5% off on orders ≥₹500</small>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="text-center">
+                    <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                         style="width: 70px; height: 70px;">
+                        <i class="fas fa-headset text-info fa-2x"></i>
+                    </div>
+                    <h6 class="fw-bold">24/7 Support</h6>
+                    <small class="text-muted">Always here to help</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Section -->
+<section id="categories" class="py-5 bg-white">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Shop by Category</h2>
+            <p class="text-muted">Browse our wide range of healthcare categories</p>
+        </div>
+        <div class="row g-4">
+            @{
+                var categories = new[] {
+                    ("Pain Relief", "fa-head-side-virus", "#ef4444"),
+                    ("Antibiotics", "fa-capsules", "#3b82f6"),
+                    ("Vitamins & Supplements", "fa-pills", "#10b981"),
+                    ("Digestive Care", "fa-stomach", "#f59e0b"),
+                    ("Skin Care", "fa-hand-sparkles", "#ec4899"),
+                    ("First Aid", "fa-first-aid", "#8b5cf6"),
+                    ("Diabetes Care", "fa-syringe", "#06b6d4"),
+                    ("Heart Health", "fa-heartbeat", "#ef4444")
+                };
+            }
+            @foreach (var (name, icon, color) in categories)
+            {
+                <div class="col-lg-3 col-md-4 col-6">
+                    <a asp-controller="Shop" asp-action="Index" asp-route-category="@name" class="text-decoration-none">
+                        <div class="card category-card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center p-4">
+                                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                                     style="width: 60px; height: 60px; background: @color; opacity: 0.1;">
+                                    <i class="fas @icon fa-2x" style="color: @color;"></i>
+                                </div>
+                                <h6 class="card-title mb-0">@name</h6>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold mb-1">Featured Products</h2>
+                <p class="text-muted mb-0">Top selling medicines this month</p>
+            </div>
+            <a asp-controller="Shop" asp-action="Index" class="btn btn-outline-primary">
+                View All <i class="fas fa-arrow-right ms-2"></i>
+            </a>
+        </div>
+        <div class="row g-4" id="featuredProducts">
+            <!-- Products loaded via AJAX or can be passed from controller -->
+            <div class="col-lg-3 col-md-4 col-6">
+                <div class="card product-card h-100">
+                    <div class="position-relative">
+                        <img src="https://via.placeholder.com/300x200?text=Paracetamol" class="card-img-top" alt="Paracetamol">
+                        <span class="product-badge"><span class="discount-badge">5% OFF</span></span>
+                        <button class="wishlist-btn" onclick="toggleWishlist(1, this)">
+                            <i class="far fa-heart"></i>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <small class="text-muted">Pain Relief</small>
+                        <h6 class="card-title mt-1">Paracetamol 500mg</h6>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="price-current">₹45.00</span>
+                            <span class="price-original">₹50.00</span>
+                        </div>
+                        <small class="stock-status stock-in"><i class="fas fa-check-circle me-1"></i>In Stock</small>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 pt-0">
+                        <button class="btn btn-primary w-100" onclick="addToCart(1)">
+                            <i class="fas fa-cart-plus me-2"></i>Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-4 col-6">
+                <div class="card product-card h-100">
+                    <div class="position-relative">
+                        <img src="https://via.placeholder.com/300x200?text=Vitamin+C" class="card-img-top" alt="Vitamin C">
+                        <button class="wishlist-btn" onclick="toggleWishlist(2, this)">
+                            <i class="far fa-heart"></i>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <small class="text-muted">Vitamins</small>
+                        <h6 class="card-title mt-1">Vitamin C 1000mg</h6>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="price-current">₹120.00</span>
+                        </div>
+                        <small class="stock-status stock-in"><i class="fas fa-check-circle me-1"></i>In Stock</small>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 pt-0">
+                        <button class="btn btn-primary w-100" onclick="addToCart(2)">
+                            <i class="fas fa-cart-plus me-2"></i>Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-4 col-6">
+                <div class="card product-card h-100">
+                    <div class="position-relative">
+                        <img src="https://via.placeholder.com/300x200?text=Omeprazole" class="card-img-top" alt="Omeprazole">
+                        <button class="wishlist-btn" onclick="toggleWishlist(3, this)">
+                            <i class="far fa-heart"></i>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <small class="text-muted">Digestive Care</small>
+                        <h6 class="card-title mt-1">Omeprazole 20mg</h6>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="price-current">₹85.00</span>
+                        </div>
+                        <small class="stock-status stock-low"><i class="fas fa-exclamation-circle me-1"></i>Low Stock</small>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 pt-0">
+                        <button class="btn btn-primary w-100" onclick="addToCart(3)">
+                            <i class="fas fa-cart-plus me-2"></i>Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-4 col-6">
+                <div class="card product-card h-100">
+                    <div class="position-relative">
+                        <img src="https://via.placeholder.com/300x200?text=Bandage+Kit" class="card-img-top" alt="First Aid Kit">
+                        <button class="wishlist-btn" onclick="toggleWishlist(4, this)">
+                            <i class="far fa-heart"></i>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <small class="text-muted">First Aid</small>
+                        <h6 class="card-title mt-1">First Aid Bandage Kit</h6>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="price-current">₹250.00</span>
+                        </div>
+                        <small class="stock-status stock-in"><i class="fas fa-check-circle me-1"></i>In Stock</small>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 pt-0">
+                        <button class="btn btn-primary w-100" onclick="addToCart(4)">
+                            <i class="fas fa-cart-plus me-2"></i>Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Why Choose Us Section -->
+<section class="py-5 bg-white">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <img src="https://via.placeholder.com/500x400?text=Why+Choose+Us" alt="Why Choose Us" 
+                     class="img-fluid rounded-3 shadow">
+            </div>
+            <div class="col-lg-6">
+                <h2 class="fw-bold mb-4">Why Choose @settings.AppName?</h2>
+                <div class="d-flex mb-3">
+                    <div class="flex-shrink-0">
+                        <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
+                             style="width: 50px; height: 50px;">
+                            <i class="fas fa-check text-primary"></i>
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="fw-bold">Licensed Pharmacy</h6>
+                        <p class="text-muted mb-0">All medicines are sourced from licensed distributors and verified manufacturers.</p>
+                    </div>
+                </div>
+                <div class="d-flex mb-3">
+                    <div class="flex-shrink-0">
+                        <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
+                             style="width: 50px; height: 50px;">
+                            <i class="fas fa-clock text-success"></i>
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="fw-bold">Quick Delivery</h6>
+                        <p class="text-muted mb-0">Same-day delivery available for orders placed before 2 PM.</p>
+                    </div>
+                </div>
+                <div class="d-flex mb-3">
+                    <div class="flex-shrink-0">
+                        <div class="bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
+                             style="width: 50px; height: 50px;">
+                            <i class="fas fa-user-md text-warning"></i>
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="fw-bold">Expert Guidance</h6>
+                        <p class="text-muted mb-0">Our pharmacists are available to answer your questions 24/7.</p>
+                    </div>
+                </div>
+                <div class="d-flex">
+                    <div class="flex-shrink-0">
+                        <div class="bg-info bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
+                             style="width: 50px; height: 50px;">
+                            <i class="fas fa-undo text-info"></i>
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="fw-bold">Easy Returns</h6>
+                        <p class="text-muted mb-0">Hassle-free returns within 7 days if you're not satisfied.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Newsletter Section -->
+<section class="py-5 bg-primary text-white">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 text-center">
+                <h3 class="fw-bold mb-3">Subscribe to Our Newsletter</h3>
+                <p class="mb-4">Get the latest health tips and exclusive offers directly in your inbox.</p>
+                <form class="d-flex gap-2">
+                    <input type="email" class="form-control form-control-lg" placeholder="Enter your email">
+                    <button type="submit" class="btn btn-light btn-lg px-4">Subscribe</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Add anti-forgery token for AJAX calls
+        $(document).ready(function() {
+            $.ajaxSetup({
+                headers: {
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                }
+            });
+        });
+    </script>
+}
+
+<form method="post" id="antiForgeryForm">
+    @Html.AntiForgeryToken()
+</form>

@@ -1,0 +1,160 @@
+@model SupplierCreateViewModel
+@{
+    ViewData["Title"] = "Edit Supplier";
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Edit Supplier</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Suppliers</a></li>
+                    <li class="breadcrumb-item active">Edit</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-8">
+                <form asp-action="Edit" method="post">
+                    <input type="hidden" asp-for="Id">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-edit me-2"></i>Edit Supplier</h3>
+                        </div>
+                        <div class="card-body">
+                            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="Name" class="form-label">Company/Supplier Name *</label>
+                                    <input asp-for="Name" class="form-control" placeholder="Enter supplier name" required>
+                                    <span asp-validation-for="Name" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="ContactPerson" class="form-label">Contact Person *</label>
+                                    <input asp-for="ContactPerson" class="form-control" placeholder="Contact person name" required>
+                                    <span asp-validation-for="ContactPerson" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="Email" class="form-label">Email</label>
+                                    <input asp-for="Email" type="email" class="form-control" placeholder="email@example.com">
+                                    <span asp-validation-for="Email" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="Phone" class="form-label">Phone *</label>
+                                    <input asp-for="Phone" class="form-control" placeholder="+91 9876543210" required>
+                                    <span asp-validation-for="Phone" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Address" class="form-label">Address</label>
+                                <textarea asp-for="Address" class="form-control" rows="2" placeholder="Street address"></textarea>
+                                <span asp-validation-for="Address" class="text-danger"></span>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="City" class="form-label">City *</label>
+                                    <input asp-for="City" class="form-control" placeholder="City name" required>
+                                    <span asp-validation-for="City" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="State" class="form-label">State</label>
+                                    <input asp-for="State" class="form-control" placeholder="State/Province">
+                                    <span asp-validation-for="State" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="GSTNumber" class="form-label">GST Number</label>
+                                    <input asp-for="GSTNumber" class="form-control" placeholder="22AAAAA0000A1Z5" maxlength="15">
+                                    <span asp-validation-for="GSTNumber" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Current Balance</label>
+                                    <div class="form-control bg-light">
+                                        ₹@Model.OpeningBalance.ToString("N2")
+                                        @if (Model.OpeningBalance > 0)
+                                        {
+                                            <span class="text-danger">(We owe)</span>
+                                        }
+                                        else if (Model.OpeningBalance < 0)
+                                        {
+                                            <span class="text-success">(They owe)</span>
+                                        }
+                                    </div>
+                                    <small class="text-muted">Balance managed through GRN and payments</small>
+                                </div>
+                            </div>
+
+                            <div class="form-check mb-3">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox">
+                                <label asp-for="IsActive" class="form-check-label">Active Supplier</label>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Update Supplier
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <a asp-action="Ledger" asp-route-id="@Model.Id" class="btn btn-outline-info float-end">
+                                <i class="fas fa-book me-2"></i>View Ledger
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header bg-info">
+                        <h3 class="card-title text-white"><i class="fas fa-history me-2"></i>Quick Stats</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2">
+                            <strong>Supplier ID:</strong> @Model.Id
+                        </p>
+                        <p class="mb-2">
+                            <strong>Status:</strong> 
+                            @if (Model.IsActive)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Inactive</span>
+                            }
+                        </p>
+                        <hr>
+                        <a asp-action="Ledger" asp-route-id="@Model.Id" class="btn btn-outline-info btn-sm w-100 mb-2">
+                            <i class="fas fa-book me-1"></i>View Full Ledger
+                        </a>
+                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary btn-sm w-100">
+                            <i class="fas fa-eye me-1"></i>View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

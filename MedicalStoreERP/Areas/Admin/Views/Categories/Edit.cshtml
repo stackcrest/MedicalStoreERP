@@ -1,0 +1,110 @@
+@model CategoryCreateViewModel
+@{
+    ViewData["Title"] = "Edit Category";
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Edit Category</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Categories</a></li>
+                    <li class="breadcrumb-item active">Edit</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-edit me-2"></i>Edit Category</h3>
+                    </div>
+                    <form asp-action="Edit" method="post">
+                        <input type="hidden" asp-for="Id">
+                        <div class="card-body">
+                            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                            <div class="mb-3">
+                                <label asp-for="Name" class="form-label">Category Name *</label>
+                                <input asp-for="Name" class="form-control" placeholder="Enter category name" required>
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Description" class="form-label">Description</label>
+                                <textarea asp-for="Description" class="form-control" rows="3" 
+                                          placeholder="Brief description of the category"></textarea>
+                                <span asp-validation-for="Description" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="ImageUrl" class="form-label">Image URL</label>
+                                <input asp-for="ImageUrl" class="form-control" placeholder="https://example.com/image.jpg">
+                                <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                                <small class="text-muted">Optional: Enter a URL for the category image</small>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label">Current Image</label>
+                                    <div>
+                                        <img src="@Model.ImageUrl" alt="@Model.Name" class="img-thumbnail" style="max-height: 100px;">
+                                    </div>
+                                </div>
+                            }
+
+                            <div class="form-check mb-3">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox">
+                                <label asp-for="IsActive" class="form-check-label">Active</label>
+                                <br>
+                                <small class="text-muted">Inactive categories won't be shown on the shop</small>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Update Category
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card bg-light">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-info-circle me-2"></i>Information</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-2">
+                            <strong>Category ID:</strong> @Model.Id
+                        </p>
+                        <hr>
+                        <h6>Tips</h6>
+                        <ul class="small text-muted mb-0">
+                            <li>Keep names consistent with existing categories</li>
+                            <li>Deactivating a category hides it from shop</li>
+                            <li>Products in this category remain unchanged</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

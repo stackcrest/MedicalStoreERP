@@ -1,0 +1,146 @@
+@model IEnumerable<MedicalStoreERP.Areas.Admin.Controllers.UserListViewModel>
+@{
+    ViewData["Title"] = "Users Management";
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Users Management</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Users</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Stats Cards -->
+        <div class="row">
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>@Model.Count()</h3>
+                        <p>Total Users</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-users"></i></div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3>@Model.Count(u => u.IsActive)</h3>
+                        <p>Active Users</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-user-check"></i></div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3>@Model.Count(u => u.Role == "Admin")</h3>
+                        <p>Administrators</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-user-shield"></i></div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-primary">
+                    <div class="inner">
+                        <h3>@Model.Count(u => u.Role == "User")</h3>
+                        <p>Customers</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-user"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-users me-2"></i>All Users</h3>
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-hover" id="usersTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Roles</th>
+                            <th>Orders</th>
+                            <th>Registered</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" 
+                                             style="width: 40px; height: 40px;">
+                                            @user.FullName.Substring(0, 1).ToUpper()
+                                        </div>
+                                        <div>
+                                            <strong>@user.FullName</strong><br>
+                                            <small class="text-muted">@user.Id.Substring(0, 8)...</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>@user.Email</td>
+                                <td>@(user.PhoneNumber ?? "-")</td>
+                                <td>
+                                    <span class="badge @(user.Role == "Admin" ? "bg-danger" : "bg-primary")">@user.Role</span>
+                                </td>
+                                <td>
+                                    <span class="text-muted">-</span>
+                                </td>
+                                <td>@user.CreatedAt.ToString("dd MMM yyyy")</td>
+                                <td>
+                                    @if (user.IsActive)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a asp-action="Details" asp-route-id="@user.Id" class="btn btn-outline-info btn-sm" title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-outline-warning btn-sm" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#usersTable').DataTable({
+                order: [[5, 'desc']],
+                pageLength: 25
+            });
+        });
+    </script>
+}

@@ -1,0 +1,259 @@
+@model MedicalStoreERP.Areas.Admin.Controllers.UserDetailViewModel
+@{
+    ViewData["Title"] = "User Details";
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">User Details</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Users</a></li>
+                    <li class="breadcrumb-item active">Details</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-4">
+                <!-- Profile Card -->
+                <div class="card card-primary card-outline">
+                    <div class="card-body box-profile">
+                        <div class="text-center">
+                            <div class="avatar bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                                 style="width: 100px; height: 100px; font-size: 2.5rem;">
+                                @Model.FullName.Substring(0, 1).ToUpper()
+                            </div>
+                            <h3 class="profile-username">@Model.FullName</h3>
+                            <p class="text-muted">@Model.Email</p>
+                            <div class="mb-3">
+                                @foreach (var role in Model.Roles)
+                                {
+                                    <span class="badge @(role == "Admin" ? "bg-danger" : "bg-primary") me-1">@role</span>
+                                }
+                                @if (Model.IsActive)
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Inactive</span>
+                                }
+                            </div>
+                        </div>
+
+                        <ul class="list-group list-group-unbordered mb-3">
+                            <li class="list-group-item">
+                                <b>Phone</b>
+                                <span class="float-end">@(Model.PhoneNumber ?? "Not provided")</span>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Email Verified</b>
+                                <span class="float-end">
+                                    @if (Model.EmailConfirmed)
+                                    {
+                                        <i class="fas fa-check-circle text-success"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-times-circle text-warning"></i>
+                                    }
+                                </span>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Registered</b>
+                                <span class="float-end">@Model.CreatedAt.ToString("dd MMM yyyy")</span>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Last Login</b>
+                                <span class="float-end">@(Model.LastLoginAt?.ToString("dd MMM yyyy hh:mm tt") ?? "Never")</span>
+                            </li>
+                        </ul>
+
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning w-100 mb-2">
+                            <i class="fas fa-edit me-2"></i>Edit User
+                        </a>
+                        <a asp-action="Index" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-arrow-left me-2"></i>Back to List
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Address Card -->
+                @if (!string.IsNullOrEmpty(Model.Address))
+                {
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-map-marker-alt me-2"></i>Address</h3>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-0">@Model.Address</p>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="col-lg-8">
+                <!-- Statistics Cards -->
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="small-box bg-info">
+                            <div class="inner">
+                                <h3>@Model.TotalOrders</h3>
+                                <p>Total Orders</p>
+                            </div>
+                            <div class="icon"><i class="fas fa-shopping-cart"></i></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="small-box bg-success">
+                            <div class="inner">
+                                <h3>₹@Model.TotalSpent.ToString("N0")</h3>
+                                <p>Total Spent</p>
+                            </div>
+                            <div class="icon"><i class="fas fa-rupee-sign"></i></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="small-box bg-primary">
+                            <div class="inner">
+                                <h3>@Model.WishlistCount</h3>
+                                <p>Wishlist Items</p>
+                            </div>
+                            <div class="icon"><i class="fas fa-heart"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order History -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-history me-2"></i>Order History</h3>
+                        <div class="card-tools">
+                            <a asp-controller="Orders" asp-action="Index" asp-route-userId="@Model.Id" class="btn btn-outline-primary btn-sm">
+                                View All Orders
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        @if (Model.Orders?.Any() == true)
+                        {
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Order #</th>
+                                        <th>Date</th>
+                                        <th>Items</th>
+                                        <th class="text-end">Total</th>
+                                        <th>Status</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var order in Model.Orders.Take(10))
+                                    {
+                                        <tr>
+                                            <td><strong>@order.OrderNumber</strong></td>
+                                            <td>@order.OrderDate.ToString("dd MMM yyyy")</td>
+                                            <td>@order.ItemCount items</td>
+                                            <td class="text-end">₹@order.TotalAmount.ToString("N2")</td>
+                                            <td>
+                                                <span class="badge @(order.Status == "Delivered" ? "bg-success" : 
+                                                                      order.Status == "Cancelled" ? "bg-danger" : 
+                                                                      order.Status == "Processing" ? "bg-warning text-dark" : "bg-info")">
+                                                    @order.Status
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a asp-controller="Orders" asp-action="Details" asp-route-id="@order.Id" 
+                                                   class="btn btn-outline-primary btn-sm">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+                            <div class="text-center py-4 text-muted">
+                                <i class="fas fa-shopping-cart fa-3x mb-3 d-block"></i>
+                                <p>No orders placed yet</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Wishlist -->
+                @if (Model.WishlistItems?.Any() == true)
+                {
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-heart me-2"></i>Wishlist Items</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                @foreach (var item in Model.WishlistItems.Take(6))
+                                {
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card h-100">
+                                            <div class="card-body p-2">
+                                                <h6 class="mb-1">@item.MedicineName</h6>
+                                                <small class="text-muted d-block">@item.Category</small>
+                                                <strong class="text-primary">₹@item.Price.ToString("N2")</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- Activity Timeline -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-stream me-2"></i>Recent Activity</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline timeline-inverse">
+                            @if (Model.Activities?.Any() == true)
+                            {
+                                @foreach (var activity in Model.Activities.Take(5))
+                                {
+                                    <div class="time-label">
+                                        <span class="bg-info">@activity.Date.ToString("dd MMM")</span>
+                                    </div>
+                                    <div>
+                                        <i class="fas @activity.Icon bg-@activity.Color"></i>
+                                        <div class="timeline-item">
+                                            <span class="time"><i class="fas fa-clock"></i> @activity.Date.ToString("hh:mm tt")</span>
+                                            <h3 class="timeline-header">@activity.Title</h3>
+                                            <div class="timeline-body">@activity.Description</div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="text-center py-4 text-muted">
+                                    <p>No recent activity</p>
+                                </div>
+                            }
+                            <div><i class="fas fa-clock bg-gray"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,136 @@
+@model List<OrderViewModel>
+@{
+    ViewData["Title"] = "My Orders";
+}
+
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+            <li class="breadcrumb-item active">My Orders</li>
+        </ol>
+    </nav>
+
+    <h2 class="mb-4"><i class="fas fa-box me-2"></i>My Orders</h2>
+
+    @if (Model?.Any() == true)
+    {
+        <div class="row g-4">
+            @foreach (var order in Model)
+            {
+                var statusClass = order.Status switch
+                {
+                    OrderStatus.Pending => "bg-warning text-dark",
+                    OrderStatus.Processing => "bg-info text-white",
+                    OrderStatus.Shipped => "bg-primary text-white",
+                    OrderStatus.Delivered => "bg-success text-white",
+                    OrderStatus.Cancelled => "bg-danger text-white",
+                    _ => "bg-secondary"
+                };
+                var statusIcon = order.Status switch
+                {
+                    OrderStatus.Pending => "clock",
+                    OrderStatus.Processing => "cog",
+                    OrderStatus.Shipped => "truck",
+                    OrderStatus.Delivered => "check-circle",
+                    OrderStatus.Cancelled => "times-circle",
+                    _ => "question-circle"
+                };
+
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="fw-bold me-3">Order #@order.OrderNumber</span>
+                                <span class="badge @statusClass">
+                                    <i class="fas fa-@statusIcon me-1"></i>@order.Status
+                                </span>
+                            </div>
+                            <small class="text-muted">Placed on @order.OrderDate.ToString("dd MMM yyyy, hh:mm tt")</small>
+                        </div>
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <div class="d-flex flex-wrap gap-3">
+                                        @foreach (var item in order.Items.Take(3))
+                                        {
+                                            <div class="d-flex align-items-center">
+                                                <img src="https://via.placeholder.com/50" 
+                                                     class="rounded me-2" width="50" height="50" style="object-fit: cover;">
+                                                <div>
+                                                    <h6 class="mb-0 small">@item.MedicineName</h6>
+                                                    <small class="text-muted">Qty: @item.Quantity</small>
+                                                </div>
+                                            </div>
+                                        }
+                                        @if (order.Items.Count > 3)
+                                        {
+                                            <span class="text-muted align-self-center">+@(order.Items.Count - 3) more items</span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                                    <div class="mb-2">
+                                        <span class="text-muted">Total: </span>
+                                        <strong class="fs-5">₹@order.TotalAmount.ToString("N2")</strong>
+                                    </div>
+                                    <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-outline-primary btn-sm me-2">
+                                        <i class="fas fa-eye me-1"></i>View Details
+                                    </a>
+                                    @if (order.Status == OrderStatus.Delivered)
+                                    {
+                                        <a asp-action="Invoice" asp-route-id="@order.Id" class="btn btn-outline-secondary btn-sm">
+                                            <i class="fas fa-file-invoice me-1"></i>Invoice
+                                        </a>
+                                    }
+                                    @if (order.Status == OrderStatus.Pending)
+                                    {
+                                        <form asp-action="Cancel" asp-route-id="@order.Id" method="post" class="d-inline"
+                                              onsubmit="return confirm('Are you sure you want to cancel this order?')">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                <i class="fas fa-times me-1"></i>Cancel
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (order.Status == OrderStatus.Shipped || order.Status == OrderStatus.Processing)
+                        {
+                            <div class="card-footer bg-light">
+                                <div class="d-flex justify-content-between align-items-center small">
+                                    <div>
+                                        <i class="fas fa-info-circle text-info me-1"></i>
+                                        @if (order.Status == OrderStatus.Processing)
+                                        {
+                                            <span>Your order is being processed and will be shipped soon.</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Your order is on the way! Expected delivery: @order.OrderDate.AddDays(5).ToString("dd MMM yyyy")</span>
+                                        }
+                                    </div>
+                                    <a asp-action="Track" asp-route-id="@order.Id" class="btn btn-link btn-sm p-0">
+                                        Track Order <i class="fas fa-arrow-right ms-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="fas fa-box-open fa-5x text-muted mb-4"></i>
+            <h3>No orders yet</h3>
+            <p class="text-muted mb-4">You haven't placed any orders. Start shopping now!</p>
+            <a asp-controller="Shop" asp-action="Index" class="btn btn-primary btn-lg">
+                <i class="fas fa-shopping-bag me-2"></i>Shop Now
+            </a>
+        </div>
+    }
+</div>

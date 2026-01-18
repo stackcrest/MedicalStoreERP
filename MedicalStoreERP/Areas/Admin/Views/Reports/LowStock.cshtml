@@ -1,0 +1,344 @@
+@model StockReportViewModel
+@{
+    ViewData["Title"] = "Low Stock Report";
+    var outOfStockItems = Model.Items.Where(i => i.StockQty == 0).ToList();
+    var criticalItems = Model.Items.Where(i => i.StockQty > 0 && i.StockQty <= i.ReorderLevel * 0.1m).ToList();
+    var lowStockItems = Model.Items.Where(i => i.StockQty > 0 && i.StockQty <= i.ReorderLevel && i.StockQty > i.ReorderLevel * 0.1m).ToList();
+    var outOfStockCount = outOfStockItems.Count;
+    var criticalCount = criticalItems.Count;
+    var lowStockCount = lowStockItems.Count;
+    var reorderValue = Model.Items.Sum(i => Math.Max((i.ReorderLevel * 2) - i.StockQty, 0) * i.PurchasePrice);
+    var categoryBreakdown = Model.Items.GroupBy(i => i.CategoryName).Select(g => new { CategoryName = g.Key, Count = g.Count() }).ToList();
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Low Stock Report</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Low Stock Report</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Filter Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-filter me-2"></i>Filter Options</h3>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label">Category</label>
+                        <select name="categoryId" class="form-select" asp-items="@ViewBag.Categories">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Stock Level</label>
+                        <select name="stockLevel" class="form-select">
+                            <option value="all">All Low Stock</option>
+                            <option value="critical">Critical (≤10% of reorder)</option>
+                            <option value="outofstock">Out of Stock Only</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Supplier</label>
+                        <select name="supplierId" class="form-select" asp-items="@ViewBag.Suppliers">
+                            <option value="">All Suppliers</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Generate
+                        </button>
+                        <a asp-action="ExportLowStock" class="btn btn-success">
+                            <i class="fas fa-file-excel me-2"></i>Export
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="row">
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-danger">
+                    <div class="inner">
+                        <h3>@outOfStockCount</h3>
+                        <p>Out of Stock</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-times-circle"></i></div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3>@criticalCount</h3>
+                        <p>Critical Level</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>@lowStockCount</h3>
+                        <p>Low Stock</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-battery-quarter"></i></div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-primary">
+                    <div class="inner">
+                        <h3>₹@reorderValue.ToString("N0")</h3>
+                        <p>Est. Reorder Value</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-rupee-sign"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Category Breakdown -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-chart-pie me-2"></i>Low Stock by Category</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="categoryChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stock Level Distribution -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-chart-bar me-2"></i>Stock Level Distribution</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="levelChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Low Stock Table -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-battery-quarter me-2"></i>Items Requiring Reorder</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-primary btn-sm" onclick="generatePurchaseOrder()">
+                        <i class="fas fa-file-alt me-1"></i>Generate Purchase Order
+                    </button>
+                </div>
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-striped" id="lowStockTable">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input type="checkbox" id="selectAll" onclick="toggleSelectAll()">
+                            </th>
+                            <th>Medicine</th>
+                            <th>Category</th>
+                            <th class="text-center">Current Stock</th>
+                            <th class="text-center">Reorder Level</th>
+                            <th class="text-center">Suggested Qty</th>
+                            <th class="text-end">Cost Price</th>
+                            <th class="text-end">Est. Cost</th>
+                            <th>Supplier</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Items?.Any() == true)
+                        {
+                            @foreach (var item in Model.Items.OrderBy(i => i.StockQty))
+                            {
+                                var isOutOfStock = item.StockQty == 0;
+                                var isCritical = item.StockQty > 0 && item.StockQty <= item.ReorderLevel * 0.1m;
+                                var suggestedQty = Math.Max((item.ReorderLevel * 2) - item.StockQty, 10);
+                                
+                                <tr class="@(isOutOfStock ? "table-danger" : isCritical ? "table-warning" : "")">
+                                    <td>
+                                        <input type="checkbox" class="item-checkbox" value="@item.MedicineId" 
+                                               data-name="@item.MedicineName" data-qty="@suggestedQty" data-cost="@item.PurchasePrice">
+                                    </td>
+                                    <td>
+                                        <strong>@item.MedicineName</strong><br>
+                                        <small class="text-muted">@item.BatchNo</small>
+                                    </td>
+                                    <td>@item.CategoryName</td>
+                                    <td class="text-center">
+                                        <strong class="@(isOutOfStock ? "text-danger" : isCritical ? "text-warning" : "text-info")">
+                                            @item.StockQty
+                                        </strong>
+                                    </td>
+                                    <td class="text-center">@item.ReorderLevel</td>
+                                    <td class="text-center">
+                                        <input type="number" class="form-control form-control-sm suggested-qty" 
+                                               value="@suggestedQty" min="1" style="width: 70px;">
+                                    </td>
+                                    <td class="text-end">₹@item.PurchasePrice.ToString("N2")</td>
+                                    <td class="text-end est-cost">
+                                        <strong>₹@((suggestedQty * item.PurchasePrice).ToString("N2"))</strong>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">-</small>
+                                    </td>
+                                    <td>
+                                        @if (isOutOfStock)
+                                        {
+                                            <span class="badge bg-danger">Out of Stock</span>
+                                        }
+                                        else if (isCritical)
+                                        {
+                                            <span class="badge bg-warning text-dark">Critical</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-info">Low Stock</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="10" class="text-center py-4 text-muted">
+                                    <i class="fas fa-check-circle fa-3x mb-3 text-success d-block"></i>
+                                    All items are adequately stocked!
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card bg-light">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-bolt me-2"></i>Quick Actions</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <a asp-controller="GRN" asp-action="Create" class="btn btn-primary btn-block w-100">
+                            <i class="fas fa-plus me-2"></i>Create GRN
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a asp-controller="Suppliers" asp-action="Index" class="btn btn-info btn-block w-100">
+                            <i class="fas fa-truck me-2"></i>View Suppliers
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="button" class="btn btn-success btn-block w-100" onclick="window.print()">
+                            <i class="fas fa-print me-2"></i>Print Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Category Chart
+        var catCtx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(catCtx, {
+            type: 'doughnut',
+            data: {
+                labels: @Html.Raw(Json.Serialize(categoryBreakdown.Select(c => c.CategoryName))),
+                datasets: [{
+                    data: @Html.Raw(Json.Serialize(categoryBreakdown.Select(c => c.Count))),
+                    backgroundColor: ['#dc3545', '#ffc107', '#17a2b8', '#28a745', '#6c757d', '#007bff', '#6f42c1']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'right' } }
+            }
+        });
+
+        // Level Chart
+        var levelCtx = document.getElementById('levelChart').getContext('2d');
+        new Chart(levelCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Out of Stock', 'Critical', 'Low Stock'],
+                datasets: [{
+                    label: 'Items',
+                    data: [@outOfStockCount, @criticalCount, @lowStockCount],
+                    backgroundColor: ['#dc3545', '#ffc107', '#17a2b8']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+
+        // Initialize DataTable
+        $(document).ready(function() {
+            $('#lowStockTable').DataTable({
+                order: [[3, 'asc']],
+                pageLength: 50,
+                columnDefs: [{ orderable: false, targets: [0, 5] }]
+            });
+        });
+
+        function toggleSelectAll() {
+            var checked = $('#selectAll').prop('checked');
+            $('.item-checkbox').prop('checked', checked);
+        }
+
+        function generatePurchaseOrder() {
+            var selected = [];
+            $('.item-checkbox:checked').each(function() {
+                var row = $(this).closest('tr');
+                selected.push({
+                    id: $(this).val(),
+                    name: $(this).data('name'),
+                    qty: row.find('.suggested-qty').val(),
+                    cost: $(this).data('cost')
+                });
+            });
+
+            if (selected.length === 0) {
+                alert('Please select at least one item');
+                return;
+            }
+
+            // Store in session and redirect to GRN create
+            // For now, just show alert
+            alert('Selected ' + selected.length + ' items for purchase order.\nTotal estimated cost: ₹' + 
+                  selected.reduce((sum, item) => sum + (item.qty * item.cost), 0).toFixed(2));
+        }
+
+        // Update estimated cost on quantity change
+        $(document).on('change', '.suggested-qty', function() {
+            var row = $(this).closest('tr');
+            var qty = parseInt($(this).val()) || 0;
+            var cost = parseFloat(row.find('.item-checkbox').data('cost')) || 0;
+            row.find('.est-cost strong').text('₹' + (qty * cost).toFixed(2));
+        });
+    </script>
+}

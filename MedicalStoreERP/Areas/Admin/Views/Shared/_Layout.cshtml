@@ -1,0 +1,892 @@
+@inject MedicalStoreERP.Services.IAppSettingsService AppSettings
+@{
+    ViewData["Title"] = ViewData["Title"] ?? "Admin Dashboard";
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    var appSettings = AppSettings.GetCachedSettings();
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - @appSettings.AppName Admin</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <!-- AdminLTE 3.4 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" rel="stylesheet">
+    <!-- DataTables -->
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <link href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-color: #1f2937;
+            --sidebar-bg: #1e293b;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        .main-sidebar {
+            background: var(--sidebar-bg);
+        }
+
+        .main-sidebar .brand-link {
+            background: rgba(0,0,0,0.15);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .nav-sidebar > .nav-item > .nav-link {
+            margin: 0.25rem 0.75rem;
+            border-radius: 8px;
+        }
+
+        .nav-sidebar > .nav-item > .nav-link.active {
+            background: var(--primary-color) !important;
+            color: white !important;
+        }
+
+        .nav-sidebar .nav-link:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .nav-sidebar .nav-icon {
+            font-size: 1rem;
+            margin-right: 0.5rem;
+        }
+
+        .small-box {
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .small-box > .inner {
+            padding: 1.25rem;
+        }
+
+        .small-box h3 {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .card {
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: none;
+        }
+
+        .card-header {
+            background: transparent;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem 1.25rem;
+        }
+
+        .card-title {
+            font-weight: 600;
+            margin-bottom: 0;
+        }
+
+        .table th {
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #6b7280;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .badge {
+            font-weight: 500;
+            padding: 0.35rem 0.65rem;
+        }
+
+        .btn {
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-success {
+            background: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-warning {
+            background: var(--warning-color);
+            border-color: var(--warning-color);
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            border-color: var(--danger-color);
+        }
+
+        .content-header h1 {
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+
+        .breadcrumb {
+            background: transparent;
+            padding: 0;
+        }
+
+        .breadcrumb-item + .breadcrumb-item::before {
+            content: "›";
+        }
+
+        /* Stats Cards */
+        .stats-card {
+            background: linear-gradient(135deg, var(--primary-color), #3b82f6);
+            color: white;
+        }
+
+        .stats-card.green {
+            background: linear-gradient(135deg, var(--secondary-color), #34d399);
+        }
+
+        .stats-card.yellow {
+            background: linear-gradient(135deg, var(--warning-color), #fbbf24);
+        }
+
+        .stats-card.red {
+            background: linear-gradient(135deg, var(--danger-color), #f87171);
+        }
+
+        /* Status Badges */
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-processing {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-shipped {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+
+        .status-delivered {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* Charts */
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Alerts */
+        .alert-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+
+        .alert-item.warning {
+            background: #fef3c7;
+        }
+
+        .alert-item.danger {
+            background: #fee2e2;
+        }
+
+        .alert-item .icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.75rem;
+        }
+
+        .alert-item.warning .icon {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .alert-item.danger .icon {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        /* Sidebar Menu */
+        .nav-header {
+            font-size: 0.65rem !important;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: rgba(255,255,255,0.4) !important;
+            padding: 1rem 1rem 0.5rem !important;
+        }
+
+        /* Action Buttons */
+        .action-btns .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        /* Form Controls */
+        .form-control, .form-select {
+            border-radius: 8px;
+            border-color: #e5e7eb;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.15);
+        }
+
+        /* User Info */
+        .user-panel {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Top Navbar */
+        .main-header {
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .main-header .nav-link {
+            padding: 0.5rem 1rem;
+        }
+
+        /* Pagination */
+        .pagination .page-link {
+            border-radius: 8px;
+            margin: 0 2px;
+        }
+
+        .pagination .page-item.active .page-link {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        /* ========== COMPREHENSIVE MOBILE RESPONSIVE STYLES ========== */
+        
+        /* Small Devices (phones) */
+        @@media (max-width: 575.98px) {
+            .content-header h1 {
+                font-size: 1.25rem;
+            }
+            
+            .breadcrumb {
+                font-size: 0.75rem;
+            }
+            
+            .small-box h3 {
+                font-size: 1.5rem;
+            }
+            
+            .small-box p {
+                font-size: 0.85rem;
+            }
+            
+            .small-box > .inner {
+                padding: 0.75rem;
+            }
+            
+            .card-body {
+                padding: 0.75rem;
+            }
+            
+            .card-header {
+                padding: 0.75rem;
+            }
+            
+            .card-title {
+                font-size: 1rem;
+            }
+            
+            .table {
+                font-size: 0.8rem;
+            }
+            
+            .table td, .table th {
+                padding: 0.5rem 0.35rem;
+            }
+            
+            .action-btns {
+                display: flex;
+                flex-direction: column;
+                gap: 0.25rem;
+            }
+            
+            .action-btns .btn {
+                width: 100%;
+                margin: 0 !important;
+            }
+            
+            .btn {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.85rem;
+            }
+            
+            .btn-sm {
+                padding: 0.35rem 0.5rem;
+                font-size: 0.75rem;
+            }
+            
+            .form-control, .form-select {
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+            
+            .pagination .page-link {
+                padding: 0.4rem 0.6rem;
+                font-size: 0.8rem;
+            }
+            
+            .badge {
+                font-size: 0.7rem;
+                padding: 0.25rem 0.4rem;
+            }
+            
+            .chart-container {
+                height: 200px;
+            }
+            
+            .modal-dialog {
+                margin: 0.5rem;
+            }
+            
+            .modal-body {
+                padding: 1rem;
+            }
+            
+            .alert-item {
+                padding: 0.5rem;
+            }
+            
+            .alert-item .icon {
+                width: 32px;
+                height: 32px;
+                font-size: 0.8rem;
+            }
+            
+            .user-panel {
+                padding: 0.75rem;
+            }
+            
+            .nav-header {
+                padding: 0.75rem 0.75rem 0.35rem !important;
+            }
+            
+            .dataTables_wrapper .dataTables_length,
+            .dataTables_wrapper .dataTables_filter,
+            .dataTables_wrapper .dataTables_info,
+            .dataTables_wrapper .dataTables_paginate {
+                text-align: center;
+                float: none;
+                padding: 0.5rem 0;
+            }
+            
+            .dataTables_wrapper .dataTables_filter input {
+                width: 100%;
+                margin-left: 0;
+            }
+        }
+        
+        /* Medium Devices (tablets) */
+        @@media (min-width: 576px) and (max-width: 991.98px) {
+            .small-box h3 {
+                font-size: 1.75rem;
+            }
+            
+            .chart-container {
+                height: 250px;
+            }
+            
+            .action-btns .btn {
+                padding: 0.35rem 0.5rem;
+            }
+        }
+        
+        /* Sidebar collapsed state for mobile */
+        @@media (max-width: 991.98px) {
+            .sidebar-mini.sidebar-collapse .main-sidebar {
+                margin-left: -250px;
+            }
+            
+            .sidebar-mini.sidebar-collapse .content-wrapper {
+                margin-left: 0 !important;
+            }
+            
+            .content-wrapper {
+                margin-left: 0 !important;
+            }
+        }
+        
+        /* Touch Device Optimizations */
+        @@media (hover: none) and (pointer: coarse) {
+            .nav-link {
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+            }
+            
+            .dropdown-item {
+                padding: 0.75rem 1rem;
+            }
+            
+            .action-btns .btn {
+                min-height: 38px;
+            }
+            
+            .page-link {
+                min-width: 44px;
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+        
+        /* Landscape Mode */
+        @@media (max-height: 500px) and (orientation: landscape) {
+            .content-header {
+                padding: 0.5rem 0;
+            }
+            
+            .small-box > .inner {
+                padding: 0.5rem;
+            }
+        }
+        
+        /* Print Styles */
+        @@media print {
+            .main-sidebar, .main-header, .main-footer {
+                display: none !important;
+            }
+            
+            .content-wrapper {
+                margin-left: 0 !important;
+            }
+            
+            .card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+        }
+    </style>
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+    <div class="wrapper">
+        <!-- Navbar -->
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="pushmenu" href="#" role="button">
+                        <i class="fas fa-bars"></i>
+                    </a>
+                </li>
+                <li class="nav-item d-none d-sm-inline-block">
+                    <a asp-area="" asp-controller="Home" asp-action="Index" class="nav-link">
+                        <i class="fas fa-external-link-alt me-1"></i>Visit Store
+                    </a>
+                </li>
+            </ul>
+
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item dropdown">
+                    <a class="nav-link" data-toggle="dropdown" href="#">
+                        <i class="far fa-bell"></i>
+                        <span class="badge badge-warning navbar-badge" id="alertCount" style="display:none;">0</span>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right" style="max-height: 400px; overflow-y: auto;">
+                        <div class="dropdown-header d-flex justify-content-between align-items-center">
+                            <span id="alertHeader">Notifications</span>
+                            <a href="#" onclick="markAllAsRead(); return false;" class="text-primary small">Mark all read</a>
+                        </div>
+                        <div id="notificationList">
+                            <a href="#" class="dropdown-item text-muted text-center">
+                                No new notifications
+                            </a>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a asp-action="Index" asp-controller="Orders" class="dropdown-item dropdown-footer">See All Orders</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="fullscreen" href="#" role="button">
+                        <i class="fas fa-expand-arrows-alt"></i>
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i>@User.Identity?.Name
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right">
+                        <a class="dropdown-item" asp-area="" asp-controller="Account" asp-action="Profile">
+                            <i class="fas fa-user me-2"></i>Profile
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <form asp-area="" asp-controller="Account" asp-action="Logout" method="post">
+                            <button type="submit" class="dropdown-item text-danger">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </button>
+                        </form>
+                    </div>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Sidebar -->
+        <aside class="main-sidebar sidebar-dark-primary elevation-4">
+            <a asp-action="Index" asp-controller="Dashboard" class="brand-link text-center">
+                <i class="fas fa-pills text-success"></i>
+                <span class="brand-text font-weight-bold ms-2">@appSettings.AppName Admin</span>
+            </a>
+
+            <div class="sidebar">
+                <div class="user-panel d-flex">
+                    <div class="image">
+                        <i class="fas fa-user-circle fa-2x text-light"></i>
+                    </div>
+                    <div class="info">
+                        <a href="#" class="d-block text-light">@User.Identity?.Name</a>
+                        <small class="text-muted">Administrator</small>
+                    </div>
+                </div>
+
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
+                        <li class="nav-item">
+                            <a asp-controller="Dashboard" asp-action="Index" 
+                               class="nav-link @(currentController == "Dashboard" ? "active" : "")">
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <p>Dashboard</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-header">INVENTORY</li>
+                        <li class="nav-item">
+                            <a asp-controller="Medicines" asp-action="Index" 
+                               class="nav-link @(currentController == "Medicines" ? "active" : "")">
+                                <i class="nav-icon fas fa-pills"></i>
+                                <p>Medicines</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="Categories" asp-action="Index" 
+                               class="nav-link @(currentController == "Categories" ? "active" : "")">
+                                <i class="nav-icon fas fa-tags"></i>
+                                <p>Categories</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="GRN" asp-action="Index" 
+                               class="nav-link @(currentController == "GRN" ? "active" : "")">
+                                <i class="nav-icon fas fa-truck-loading"></i>
+                                <p>Goods Receipt (GRN)</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-header">SALES</li>
+                        <li class="nav-item">
+                            <a asp-controller="POS" asp-action="Index" 
+                               class="nav-link @(currentController == "POS" && currentAction == "Index" ? "active" : "")">
+                                <i class="nav-icon fas fa-cash-register"></i>
+                                <p>Point of Sale</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="POS" asp-action="Sales" 
+                               class="nav-link @(currentController == "POS" && currentAction == "Sales" ? "active" : "")">
+                                <i class="nav-icon fas fa-receipt"></i>
+                                <p>Offline Sales</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="Orders" asp-action="Index" 
+                               class="nav-link @(currentController == "Orders" ? "active" : "")">
+                                <i class="nav-icon fas fa-shopping-cart"></i>
+                                <p>Online Orders</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="Orders" asp-action="PendingOrders" 
+                               class="nav-link @(currentAction == "PendingOrders" ? "active" : "")">
+                                <i class="nav-icon fas fa-clock"></i>
+                                <p>Pending Orders</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-header">PROCUREMENT</li>
+                        <li class="nav-item">
+                            <a asp-controller="Suppliers" asp-action="Index" 
+                               class="nav-link @(currentController == "Suppliers" ? "active" : "")">
+                                <i class="nav-icon fas fa-truck"></i>
+                                <p>Suppliers</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-header">CONTENT</li>
+                        <li class="nav-item">
+                            <a asp-controller="Articles" asp-action="Index" 
+                               class="nav-link @(currentController == "Articles" ? "active" : "")">
+                                <i class="nav-icon fas fa-newspaper"></i>
+                                <p>Health Articles</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-header">REPORTS</li>
+                        <li class="nav-item">
+                            <a asp-controller="Reports" asp-action="Sales" 
+                               class="nav-link @(currentAction == "Sales" ? "active" : "")">
+                                <i class="nav-icon fas fa-chart-line"></i>
+                                <p>Sales Report</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="Reports" asp-action="Inventory" 
+                               class="nav-link @(currentAction == "Inventory" ? "active" : "")">
+                                <i class="nav-icon fas fa-boxes"></i>
+                                <p>Inventory Report</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="Reports" asp-action="GST" 
+                               class="nav-link @(currentAction == "GST" ? "active" : "")">
+                                <i class="nav-icon fas fa-file-invoice-dollar"></i>
+                                <p>GST Report</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="Reports" asp-action="ExpiryReport" 
+                               class="nav-link @(currentAction == "ExpiryReport" ? "active" : "")">
+                                <i class="nav-icon fas fa-calendar-times"></i>
+                                <p>Expiry Report</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="Reports" asp-action="LowStock" 
+                               class="nav-link @(currentAction == "LowStock" ? "active" : "")">
+                                <i class="nav-icon fas fa-exclamation-triangle"></i>
+                                <p>Low Stock Report</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-header">SUPPORT</li>
+                        <li class="nav-item">
+                            <a asp-controller="Contact" asp-action="Index" 
+                               class="nav-link @(currentController == "Contact" ? "active" : "")">
+                                <i class="nav-icon fas fa-envelope"></i>
+                                <p>Contact Messages</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-header">ADMINISTRATION</li>
+                        <li class="nav-item">
+                            <a asp-controller="Users" asp-action="Index" 
+                               class="nav-link @(currentController == "Users" ? "active" : "")">
+                                <i class="nav-icon fas fa-users"></i>
+                                <p>Users</p>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Content Wrapper -->
+        <div class="content-wrapper">
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show m-3" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+                    <button type="button" class="close" data-dismiss="alert">
+                        <span>&times;</span>
+                    </button>
+                </div>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+                    <button type="button" class="close" data-dismiss="alert">
+                        <span>&times;</span>
+                    </button>
+                </div>
+            }
+
+            @RenderBody()
+        </div>
+
+        <!-- Footer -->
+        <footer class="main-footer">
+            <div class="float-right d-none d-sm-inline">
+                Medical Store ERP v1.0
+            </div>
+            <strong>&copy; @DateTime.Now.Year @appSettings.AppName.</strong> All rights reserved.
+        </footer>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Bootstrap 4 (required for AdminLTE) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- AdminLTE -->
+    <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+    <!-- DataTables -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <script>
+        // Initialize DataTables
+        $(document).ready(function() {
+            if ($.fn.DataTable) {
+                $('.data-table').DataTable({
+                    responsive: true,
+                    pageLength: 20,
+                    order: [[0, 'desc']]
+                });
+            }
+
+            // Load notifications
+            loadNotifications();
+            
+            // Refresh notifications every 30 seconds
+            setInterval(loadNotifications, 30000);
+        });
+
+        // Load dashboard notifications
+        function loadNotifications() {
+            // Fetch order notifications from API
+            $.get('/api/Notification?count=10', function(data) {
+                var count = data.filter(n => !n.isRead).length;
+                
+                if (count > 0) {
+                    $('#alertCount').text(count).show();
+                } else {
+                    $('#alertCount').text('0').hide();
+                }
+                
+                $('#alertHeader').text(data.length > 0 ? data.length + ' Notifications' : 'Notifications');
+                
+                if (data.length > 0) {
+                    var html = '';
+                    data.slice(0, 8).forEach(function(item) {
+                        var iconClass = 'fa-info-circle text-info';
+                        if (item.type === 'success') iconClass = 'fa-check-circle text-success';
+                        else if (item.type === 'warning') iconClass = 'fa-exclamation-triangle text-warning';
+                        else if (item.type === 'danger') iconClass = 'fa-exclamation-circle text-danger';
+                        
+                        var readClass = item.isRead ? 'text-muted' : 'font-weight-bold';
+                        
+                        html += `
+                            <a href="${item.link || '#'}" class="dropdown-item notification-item ${readClass}" data-id="${item.id}">
+                                <div class="d-flex align-items-start">
+                                    <i class="fas ${iconClass} mr-2 mt-1"></i>
+                                    <div class="flex-grow-1">
+                                        <div class="small ${readClass}">${item.title}</div>
+                                        <div class="text-muted small">${item.message}</div>
+                                        <span class="text-muted text-xs">${item.timeAgo}</span>
+                                    </div>
+                                </div>
+                            </a>
+                            <div class="dropdown-divider"></div>
+                        `;
+                    });
+                    $('#notificationList').html(html);
+                    
+                    // Mark as read on click
+                    $('.notification-item').on('click', function() {
+                        var id = $(this).data('id');
+                        $.post('/api/Notification/' + id + '/read');
+                    });
+                } else {
+                    $('#notificationList').html('<a href="#" class="dropdown-item text-muted text-center">No new notifications</a>');
+                }
+            }).fail(function() {
+                // Fallback to low stock notifications
+                $.get('@Url.Action("GetLowStockMedicines", "Medicines")', function(data) {
+                    var count = data.length;
+                    if (count > 0) {
+                        $('#alertCount').text(count).show();
+                        $('#alertHeader').text(count + ' Alerts');
+
+                        var html = '';
+                        data.slice(0, 5).forEach(function(item) {
+                            html += `
+                                <a href="@Url.Action("Edit", "Medicines")/${item.id}" class="dropdown-item">
+                                    <i class="fas fa-exclamation-triangle text-warning mr-2"></i>
+                                    ${item.name} - Low Stock (${item.stockQuantity})
+                                </a>
+                            `;
+                        });
+                        $('#notificationList').html(html);
+                    }
+                });
+            });
+        }
+
+        // Mark all notifications as read
+        function markAllAsRead() {
+            $.post('/api/Notification/read-all', function() {
+                loadNotifications();
+            });
+        }
+
+        // Confirm delete
+        function confirmDelete(form) {
+            if (confirm('Are you sure you want to delete this item? This action cannot be undone.')) {
+                form.submit();
+            }
+            return false;
+        }
+
+        // Show toast notification
+        function showToast(message, type) {
+            var alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            var icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
+
+            var toast = $(`
+                <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+                     style="top: 70px; right: 20px; z-index: 9999; min-width: 300px;">
+                    <i class="fas fa-${icon} mr-2"></i>${message}
+                    <button type="button" class="close" data-dismiss="alert">
+                        <span>&times;</span>
+                    </button>
+                </div>
+            `);
+
+            $('body').append(toast);
+
+            setTimeout(function() {
+                toast.fadeOut(function() { $(this).remove(); });
+            }, 3000);
+        }
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

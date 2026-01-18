@@ -1,0 +1,197 @@
+@model OfflineSaleViewModel
+@{
+    ViewData["Title"] = "Sale Details";
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Sale #@Model.InvoiceNumber</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Sales">Offline Sales</a></li>
+                    <li class="breadcrumb-item active">@Model.InvoiceNumber</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Sale Items -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-shopping-basket me-2"></i>Sale Items</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Product</th>
+                                    <th class="text-center">HSN</th>
+                                    <th class="text-center">Qty</th>
+                                    <th class="text-end">Rate</th>
+                                    <th class="text-center">GST %</th>
+                                    <th class="text-end">GST Amt</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{ var index = 1; }
+                                @foreach (var item in Model.Items)
+                                {
+                                    <tr>
+                                        <td>@index</td>
+                                        <td>
+                                            <strong>@item.MedicineName</strong><br>
+                                            <small class="text-muted">Batch: @item.BatchNo</small>
+                                        </td>
+                                        <td class="text-center">@item.HSNCode</td>
+                                        <td class="text-center">@item.Quantity</td>
+                                        <td class="text-end">₹@item.UnitPrice.ToString("N2")</td>
+                                        <td class="text-center">@item.GSTPercent%</td>
+                                        <td class="text-end">₹@item.GSTAmount.ToString("N2")</td>
+                                        <td class="text-end"><strong>₹@item.TotalPrice.ToString("N2")</strong></td>
+                                    </tr>
+                                    index++;
+                                }
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="7" class="text-end">Subtotal</td>
+                                    <td class="text-end">₹@Model.SubTotal.ToString("N2")</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="7" class="text-end">CGST</td>
+                                    <td class="text-end">₹@Model.CGSTAmount.ToString("N2")</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="7" class="text-end">SGST</td>
+                                    <td class="text-end">₹@Model.SGSTAmount.ToString("N2")</td>
+                                </tr>
+                                @if (Model.DiscountAmount > 0)
+                                {
+                                    <tr class="text-success">
+                                        <td colspan="7" class="text-end">Discount</td>
+                                        <td class="text-end">-₹@Model.DiscountAmount.ToString("N2")</td>
+                                    </tr>
+                                }
+                                <tr>
+                                    <td colspan="7" class="text-end"><strong class="fs-5">Grand Total</strong></td>
+                                    <td class="text-end"><strong class="fs-5 text-primary">₹@Model.TotalAmount.ToString("N2")</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <!-- Sale Info -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-info-circle me-2"></i>Sale Information</h3>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <td class="text-muted">Invoice Number</td>
+                                <td class="text-end"><strong>@Model.InvoiceNumber</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Date</td>
+                                <td class="text-end">@Model.SaleDate.ToString("dd MMM yyyy")</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Time</td>
+                                <td class="text-end">@Model.SaleDate.ToString("hh:mm tt")</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Payment Method</td>
+                                <td class="text-end">
+                                    <span class="badge @(Model.PaymentMethod == PaymentMethod.COD ? "bg-secondary" : "bg-success")">
+                                        @(Model.PaymentMethod == PaymentMethod.COD ? "Cash" : Model.PaymentMethod.ToString())
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Cashier</td>
+                                <td class="text-end">@(Model.CreatedByName ?? "Admin")</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Customer Info -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-user me-2"></i>Customer</h3>
+                    </div>
+                    <div class="card-body">
+                        @if (!string.IsNullOrEmpty(Model.CustomerName) || !string.IsNullOrEmpty(Model.CustomerPhone))
+                        {
+                            @if (!string.IsNullOrEmpty(Model.CustomerName))
+                            {
+                                <h6>@Model.CustomerName</h6>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.CustomerPhone))
+                            {
+                                <p class="mb-1 small"><i class="fas fa-phone me-2 text-muted"></i>@Model.CustomerPhone</p>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.CustomerAddress))
+                            {
+                                <p class="mb-0 small"><i class="fas fa-map-marker-alt me-2 text-muted"></i>@Model.CustomerAddress</p>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted mb-0">Walk-in Customer</p>
+                        }
+                    </div>
+                </div>
+
+                <!-- Payment Details -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-credit-card me-2"></i>Payment Details</h3>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <td class="text-muted">Total Amount</td>
+                                <td class="text-end text-primary fw-bold">₹@Model.TotalAmount.ToString("N2")</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Amount Received</td>
+                                <td class="text-end">₹@Model.AmountReceived.ToString("N2")</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Change Given</td>
+                                <td class="text-end text-success">₹@Model.ChangeAmount.ToString("N2")</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="card">
+                    <div class="card-body">
+                        <a asp-action="Invoice" asp-route-id="@Model.Id" class="btn btn-primary w-100 mb-2" target="_blank">
+                            <i class="fas fa-print me-2"></i>Print Invoice
+                        </a>
+                        <a asp-action="Sales" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Sales
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

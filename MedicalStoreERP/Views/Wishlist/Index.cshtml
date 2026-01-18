@@ -1,0 +1,183 @@
+@model WishlistViewModel
+@{
+    ViewData["Title"] = "My Wishlist";
+}
+
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+            <li class="breadcrumb-item active">Wishlist</li>
+        </ol>
+    </nav>
+
+    <h2 class="mb-4">
+        <i class="fas fa-heart text-danger me-2"></i>My Wishlist
+        @if (Model.Items.Any())
+        {
+            <span class="badge bg-secondary ms-2">@Model.Items.Count items</span>
+        }
+    </h2>
+
+    @if (Model.Items.Any())
+    {
+        <div class="row">
+            @foreach (var item in Model.Items)
+            {
+                <div class="col-6 col-md-4 col-lg-3 mb-4">
+                    <div class="card h-100 product-card">
+                        <!-- Remove Button -->
+                        <button type="button" class="btn btn-sm btn-danger position-absolute" 
+                                style="top: 10px; right: 10px; z-index: 10;"
+                                onclick="removeFromWishlist(@item.MedicineId)">
+                            <i class="fas fa-times"></i>
+                        </button>
+
+                        <!-- Product Image -->
+                        <a asp-controller="Shop" asp-action="Details" asp-route-id="@item.MedicineId" class="text-decoration-none">
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
+                                @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                {
+                                    <img src="@item.ImageUrl" alt="@item.MedicineName" class="img-fluid p-2" style="max-height: 170px;">
+                                }
+                                else
+                                {
+                                    <i class="fas fa-pills fa-4x text-muted"></i>
+                                }
+                            </div>
+                        </a>
+
+                        <div class="card-body">
+                            <!-- Category -->
+                            <small class="text-muted">@item.CategoryName</small>
+                            
+                            <!-- Title -->
+                            <h6 class="card-title mb-2">
+                                <a asp-controller="Shop" asp-action="Details" asp-route-id="@item.MedicineId" 
+                                   class="text-decoration-none text-dark">
+                                    @item.MedicineName
+                                </a>
+                            </h6>
+
+                            <!-- Price -->
+                            <p class="text-primary mb-2"><strong>₹@item.Price.ToString("N2")</strong></p>
+
+                            <!-- Stock Status -->
+                            @if (item.IsInStock)
+                            {
+                                <span class="badge bg-success mb-2">In Stock</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger mb-2">Out of Stock</span>
+                            }
+
+                            <!-- Add to Cart Button -->
+                            @if (item.IsInStock)
+                            {
+                                <button type="button" class="btn btn-primary btn-sm w-100" onclick="addToCart(@item.MedicineId)">
+                                    <i class="fas fa-cart-plus me-1"></i>Add to Cart
+                                </button>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-secondary btn-sm w-100" disabled>
+                                    <i class="fas fa-bell me-1"></i>Notify Me
+                                </button>
+                            }
+                        </div>
+
+                        <!-- Added Date -->
+                        <div class="card-footer bg-transparent text-muted small">
+                            <i class="far fa-clock me-1"></i>Added @item.AddedAt.ToString("dd MMM yyyy")
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Actions -->
+        <div class="d-flex justify-content-between align-items-center mt-4 pt-4 border-top">
+            <a asp-controller="Shop" asp-action="Index" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Continue Shopping
+            </a>
+            <div>
+                <button type="button" class="btn btn-success" onclick="addAllToCart()">
+                    <i class="fas fa-cart-plus me-2"></i>Add All to Cart
+                </button>
+                <button type="button" class="btn btn-outline-danger" onclick="clearWishlist()">
+                    <i class="fas fa-trash me-2"></i>Clear Wishlist
+                </button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="far fa-heart fa-5x text-muted mb-4"></i>
+            <h4>Your wishlist is empty</h4>
+            <p class="text-muted">Browse our products and add items you love to your wishlist.</p>
+            <a asp-controller="Shop" asp-action="Index" class="btn btn-primary">
+                <i class="fas fa-shopping-bag me-2"></i>Start Shopping
+            </a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function addToCart(medicineId) {
+            $.ajax({
+                url: '/Cart/Add',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ medicineId: medicineId, quantity: 1 }),
+                success: function(result) {
+                    if (result.success) {
+                        updateCartCount(result.cartCount);
+                        showToast('Success', 'Product added to cart!', 'success');
+                    } else {
+                        showToast('Error', result.message || 'Failed to add to cart', 'error');
+                    }
+                },
+                error: function() {
+                    showToast('Error', 'Failed to add to cart', 'error');
+                }
+            });
+        }
+
+        function removeFromWishlist(medicineId) {
+            $.post('/Wishlist/Remove', { medicineId: medicineId }, function(result) {
+                if (result.success) {
+                    location.reload();
+                } else {
+                    showToast('Error', result.message || 'Failed to remove from wishlist', 'error');
+                }
+            });
+        }
+
+        function addAllToCart() {
+            $.post('/Wishlist/AddAllToCart', function(result) {
+                if (result.success) {
+                    updateCartCount(result.cartCount);
+                    showToast('Success', 'All items added to cart!', 'success');
+                } else {
+                    showToast('Error', result.message || 'Failed to add items to cart', 'error');
+                }
+            });
+        }
+
+        function clearWishlist() {
+            if (confirm('Are you sure you want to clear your entire wishlist?')) {
+                $.post('/Wishlist/Clear', function(result) {
+                    if (result.success) {
+                        location.reload();
+                    } else {
+                        showToast('Error', result.message || 'Failed to clear wishlist', 'error');
+                    }
+                });
+            }
+        }
+    </script>
+}

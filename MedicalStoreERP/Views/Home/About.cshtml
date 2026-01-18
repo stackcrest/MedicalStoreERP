@@ -1,0 +1,270 @@
+@inject MedicalStoreERP.Services.IAppSettingsService AppSettings
+@{
+    ViewData["Title"] = "About Us";
+    var settings = AppSettings.GetCachedSettings();
+}
+
+<!-- Hero Section -->
+<section class="bg-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8 mx-auto text-center">
+                <h1 class="display-4 fw-bold mb-3">@settings.AboutTitle</h1>
+                <p class="lead mb-0">Your trusted partner for quality healthcare products and medicines</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Breadcrumb -->
+<div class="container py-3">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+            <li class="breadcrumb-item active">About Us</li>
+        </ol>
+    </nav>
+</div>
+
+<!-- About Content -->
+<section class="py-5">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                @if (!string.IsNullOrEmpty(settings.AboutImage) && settings.AboutImage != "/images/about-us.jpg")
+                {
+                    <img src="@settings.AboutImage" alt="About @settings.AppName" 
+                         class="img-fluid rounded-3 shadow">
+                }
+                else
+                {
+                    <img src="https://via.placeholder.com/600x400?text=Medical+Store" alt="About @settings.AppName" 
+                         class="img-fluid rounded-3 shadow">
+                }
+            </div>
+            <div class="col-lg-6">
+                <h2 class="fw-bold mb-4">Who We Are</h2>
+                @if (!string.IsNullOrEmpty(settings.AboutContent))
+                {
+                    @Html.Raw(settings.AboutContent)
+                }
+                else
+                {
+                    <p class="text-muted">
+                        @settings.AppName is a leading pharmaceutical retail platform committed to providing 
+                        quality healthcare products at affordable prices. Since our establishment, we have been 
+                        dedicated to making healthcare accessible to everyone.
+                    </p>
+                    <p class="text-muted">
+                        Our platform connects customers with genuine medicines, healthcare products, and wellness 
+                        essentials from trusted manufacturers. We ensure that every product we sell meets the 
+                        highest quality standards and regulatory requirements.
+                    </p>
+                }
+                <div class="row g-3 mt-4">
+                    <div class="col-6">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+                                <i class="fas fa-pills text-primary fa-lg"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0">10,000+</h5>
+                                <small class="text-muted">Products</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
+                                <i class="fas fa-users text-success fa-lg"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0">50,000+</h5>
+                                <small class="text-muted">Happy Customers</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-info bg-opacity-10 rounded-circle p-3 me-3">
+                                <i class="fas fa-truck text-info fa-lg"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0">100+</h5>
+                                <small class="text-muted">Cities Served</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-3 me-3">
+                                <i class="fas fa-award text-warning fa-lg"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0">5+ Years</h5>
+                                <small class="text-muted">Experience</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Mission & Vision -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                             style="width: 60px; height: 60px;">
+                            <i class="fas fa-bullseye text-primary fa-lg"></i>
+                        </div>
+                        <h4 class="fw-bold">Our Mission</h4>
+                        <p class="text-muted mb-0">
+                            @if (!string.IsNullOrEmpty(settings.MissionStatement))
+                            {
+                                @settings.MissionStatement
+                            }
+                            else
+                            {
+                                <text>To make quality healthcare accessible and affordable for everyone by providing 
+                                genuine medicines and healthcare products through a seamless and trustworthy 
+                                platform. We strive to ensure that no one has to compromise on their health 
+                                due to lack of access or affordability.</text>
+                            }
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                             style="width: 60px; height: 60px;">
+                            <i class="fas fa-eye text-success fa-lg"></i>
+                        </div>
+                        <h4 class="fw-bold">Our Vision</h4>
+                        <p class="text-muted mb-0">
+                            @if (!string.IsNullOrEmpty(settings.VisionStatement))
+                            {
+                                @settings.VisionStatement
+                            }
+                            else
+                            {
+                                <text>To become the most trusted and preferred healthcare platform in India, known 
+                                for our commitment to quality, customer service, and innovation. We envision 
+                                a future where everyone has easy access to the healthcare products they need, 
+                                when they need them.</text>
+                            }
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Why Choose Us -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Why Choose Us</h2>
+            <p class="text-muted">Here's what makes us different from others</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                         style="width: 80px; height: 80px;">
+                        <i class="fas fa-certificate text-primary fa-2x"></i>
+                    </div>
+                    <h5 class="fw-bold">100% Authentic Products</h5>
+                    <p class="text-muted">
+                        All our products are sourced directly from authorized distributors and manufacturers, 
+                        ensuring authenticity and quality.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                         style="width: 80px; height: 80px;">
+                        <i class="fas fa-tags text-success fa-2x"></i>
+                    </div>
+                    <h5 class="fw-bold">Best Prices</h5>
+                    <p class="text-muted">
+                        We offer competitive prices and regular discounts to make healthcare affordable 
+                        for everyone.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                         style="width: 80px; height: 80px;">
+                        <i class="fas fa-shipping-fast text-info fa-2x"></i>
+                    </div>
+                    <h5 class="fw-bold">Fast Delivery</h5>
+                    <p class="text-muted">
+                        Quick and reliable delivery to your doorstep with real-time tracking and 
+                        secure packaging.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                         style="width: 80px; height: 80px;">
+                        <i class="fas fa-headset text-warning fa-2x"></i>
+                    </div>
+                    <h5 class="fw-bold">24/7 Support</h5>
+                    <p class="text-muted">
+                        Our dedicated customer support team is available round the clock to assist 
+                        you with any queries.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="bg-danger bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                         style="width: 80px; height: 80px;">
+                        <i class="fas fa-user-md text-danger fa-2x"></i>
+                    </div>
+                    <h5 class="fw-bold">Expert Guidance</h5>
+                    <p class="text-muted">
+                        Get expert advice from our team of qualified pharmacists for all your 
+                        healthcare needs.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="bg-secondary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                         style="width: 80px; height: 80px;">
+                        <i class="fas fa-lock text-secondary fa-2x"></i>
+                    </div>
+                    <h5 class="fw-bold">Secure Payments</h5>
+                    <p class="text-muted">
+                        Multiple secure payment options with encrypted transactions to protect 
+                        your financial information.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5 bg-primary text-white">
+    <div class="container text-center">
+        <h3 class="fw-bold mb-3">Ready to Start Shopping?</h3>
+        <p class="mb-4">Browse our wide range of medicines and healthcare products today.</p>
+        <a asp-controller="Shop" asp-action="Index" class="btn btn-light btn-lg">
+            <i class="fas fa-shopping-cart me-2"></i>Shop Now
+        </a>
+    </div>
+</section>

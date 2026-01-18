@@ -1,0 +1,93 @@
+@model List<SupplierViewModel>
+@{
+    ViewData["Title"] = "Suppliers";
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Suppliers</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Suppliers</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-truck me-2"></i>Suppliers (@Model.Count)</h3>
+                <div class="card-tools">
+                    <a asp-action="Create" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus me-1"></i>Add Supplier
+                    </a>
+                </div>
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Contact Person</th>
+                            <th>Phone</th>
+                            <th>City</th>
+                            <th>GST Number</th>
+                            <th>Balance</th>
+                            <th>Status</th>
+                            <th width="180">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var supplier in Model)
+                        {
+                            <tr>
+                                <td><strong>@supplier.Name</strong></td>
+                                <td>@supplier.ContactPerson</td>
+                                <td>@supplier.Phone</td>
+                                <td>@supplier.City</td>
+                                <td>@supplier.GSTIN</td>
+                                <td class="@(supplier.CurrentBalance > 0 ? "text-danger" : "text-success")">
+                                    ₹@supplier.CurrentBalance.ToString("N2")
+                                </td>
+                                <td>
+                                    @if (supplier.IsActive)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    }
+                                </td>
+                                <td class="action-btns">
+                                    <a asp-action="Details" asp-route-id="@supplier.Id" class="btn btn-info btn-sm" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@supplier.Id" class="btn btn-warning btn-sm" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a asp-action="Ledger" asp-route-id="@supplier.Id" class="btn btn-primary btn-sm" title="Ledger">
+                                        <i class="fas fa-book"></i>
+                                    </a>
+                                    <form asp-action="Delete" asp-route-id="@supplier.Id" method="post" class="d-inline"
+                                          onsubmit="return confirmDelete(this)">
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>

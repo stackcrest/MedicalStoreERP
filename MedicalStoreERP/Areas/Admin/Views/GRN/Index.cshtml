@@ -1,0 +1,102 @@
+@model List<GRNViewModel>
+@{
+    ViewData["Title"] = "Goods Receipt Notes";
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Goods Receipt Notes (GRN)</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item active">GRN</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Filter Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-filter me-2"></i>Filter</h3>
+            </div>
+            <div class="card-body">
+                <form asp-action="Index" method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <select name="supplierId" class="form-select" asp-items="@ViewBag.Suppliers">
+                            <option value="">All Suppliers</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="date" name="fromDate" class="form-control" value="@ViewBag.FromDate">
+                    </div>
+                    <div class="col-md-2">
+                        <input type="date" name="toDate" class="form-control" value="@ViewBag.ToDate">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-search me-1"></i>Search
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="fas fa-redo me-1"></i>Reset
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- GRN Table -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-truck-loading me-2"></i>GRN List (@Model.Count)</h3>
+                <div class="card-tools">
+                    <a asp-action="Create" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus me-1"></i>Create GRN
+                    </a>
+                </div>
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>GRN #</th>
+                            <th>Supplier</th>
+                            <th>Invoice #</th>
+                            <th>Items</th>
+                            <th>Total Amount</th>
+                            <th>Received Date</th>
+                            <th width="120">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var grn in Model)
+                        {
+                            <tr>
+                                <td><strong>@grn.GRNNumber</strong></td>
+                                <td>@grn.SupplierName</td>
+                                <td>@grn.SupplierInvoiceNo</td>
+                                <td>@grn.Items.Count items</td>
+                                <td><strong>₹@grn.TotalAmount.ToString("N2")</strong></td>
+                                <td>@grn.GRNDate.ToString("dd/MM/yyyy")</td>
+                                <td class="action-btns">
+                                    <a asp-action="Details" asp-route-id="@grn.Id" class="btn btn-info btn-sm" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a asp-action="Print" asp-route-id="@grn.Id" class="btn btn-secondary btn-sm" title="Print">
+                                        <i class="fas fa-print"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>

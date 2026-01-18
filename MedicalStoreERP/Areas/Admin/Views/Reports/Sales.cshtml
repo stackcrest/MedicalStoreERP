@@ -1,0 +1,281 @@
+@model SalesReportViewModel
+@{
+    ViewData["Title"] = "Sales Report";
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Sales Report</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Sales Report</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Filter Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-filter me-2"></i>Filter Options</h3>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label">From Date</label>
+                        <input type="date" name="fromDate" class="form-control" value="@Model.FromDate.ToString("yyyy-MM-dd")">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">To Date</label>
+                        <input type="date" name="toDate" class="form-control" value="@Model.ToDate.ToString("yyyy-MM-dd")">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Category</label>
+                        <select name="categoryId" class="form-select" asp-items="@ViewBag.Categories">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Generate Report
+                        </button>
+                        <a asp-action="ExportSalesReport" asp-route-fromDate="@Model.FromDate.ToString("yyyy-MM-dd")" 
+                           asp-route-toDate="@Model.ToDate.ToString("yyyy-MM-dd")" class="btn btn-success">
+                            <i class="fas fa-file-excel me-2"></i>Export
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="row">
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>@Model.TotalOrders</h3>
+                        <p>Total Orders</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-shopping-cart"></i></div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3>₹@Model.TotalRevenue.ToString("N0")</h3>
+                        <p>Total Revenue</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-rupee-sign"></i></div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3>₹@Model.TotalDiscount.ToString("N0")</h3>
+                        <p>Total Discounts</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-tags"></i></div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-primary">
+                    <div class="inner">
+                        <h3>₹@Model.TotalGST.ToString("N0")</h3>
+                        <p>Total GST Collected</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-file-invoice"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Daily Sales Chart -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-chart-line me-2"></i>Daily Sales Trend</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="salesChart" height="100"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Breakdown -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-chart-pie me-2"></i>Sales by Category</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="categoryChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Selling Products -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-trophy me-2"></i>Top Selling Products</h3>
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th class="text-center">Qty Sold</th>
+                            <th class="text-end">Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.TopProducts?.Any() == true)
+                        {
+                            var rank = 0;
+                            @foreach (var product in Model.TopProducts)
+                            {
+                                rank++;
+                                <tr>
+                                    <td>
+                                        @if (rank <= 3)
+                                        {
+                                            <span class="badge @(rank == 1 ? "bg-warning" : rank == 2 ? "bg-secondary" : "bg-danger")">@rank</span>
+                                        }
+                                        else
+                                        {
+                                            @rank
+                                        }
+                                    </td>
+                                    <td><strong>@product.ProductName</strong></td>
+                                    <td>@product.CategoryName</td>
+                                    <td class="text-center">@product.QuantitySold</td>
+                                    <td class="text-end">₹@product.Revenue.ToString("N2")</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">No sales data for selected period</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Detailed Orders -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-list me-2"></i>Order Details</h3>
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-striped" id="ordersTable">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Items</th>
+                            <th class="text-end">Subtotal</th>
+                            <th class="text-end">Discount</th>
+                            <th class="text-end">GST</th>
+                            <th class="text-end">Total</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Orders?.Any() == true)
+                        {
+                            @foreach (var order in Model.Orders)
+                            {
+                                <tr>
+                                    <td><a asp-controller="Orders" asp-action="Details" asp-route-id="@order.Id">@order.OrderNumber</a></td>
+                                    <td>@order.OrderDate.ToString("dd MMM yyyy")</td>
+                                    <td>@order.CustomerName</td>
+                                    <td>@order.ItemCount</td>
+                                    <td class="text-end">₹@order.SubTotal.ToString("N2")</td>
+                                    <td class="text-end text-warning">₹@order.DiscountAmount.ToString("N2")</td>
+                                    <td class="text-end">₹@order.GSTAmount.ToString("N2")</td>
+                                    <td class="text-end"><strong>₹@order.TotalAmount.ToString("N2")</strong></td>
+                                    <td>
+                                        <span class="badge @(order.Status == "Delivered" ? "bg-success" : order.Status == "Cancelled" ? "bg-danger" : "bg-info")">
+                                            @order.Status
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Daily Sales Chart
+        var salesCtx = document.getElementById('salesChart').getContext('2d');
+        new Chart(salesCtx, {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.DailySales?.Select(d => d.Date.ToString("dd MMM")))),
+                datasets: [{
+                    label: 'Revenue',
+                    data: @Html.Raw(Json.Serialize(Model.DailySales?.Select(d => d.Revenue))),
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+
+        // Category Chart
+        var catCtx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(catCtx, {
+            type: 'doughnut',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.CategorySales?.Select(c => c.CategoryName))),
+                datasets: [{
+                    data: @Html.Raw(Json.Serialize(Model.CategorySales?.Select(c => c.TotalSales))),
+                    backgroundColor: ['#007bff', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6f42c1', '#fd7e14']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+
+        // Initialize DataTable
+        $(document).ready(function() {
+            $('#ordersTable').DataTable({
+                order: [[1, 'desc']],
+                pageLength: 25
+            });
+        });
+    </script>
+}

@@ -1,0 +1,327 @@
+@model CartViewModel
+@{
+    ViewData["Title"] = "Shopping Cart";
+}
+
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Shop" asp-action="Index">Shop</a></li>
+            <li class="breadcrumb-item active">Cart</li>
+        </ol>
+    </nav>
+
+    <h2 class="mb-4"><i class="fas fa-shopping-cart me-2"></i>Shopping Cart</h2>
+
+    @if (Model.Items?.Any() == true)
+    {
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <h5 class="mb-0">Cart Items (@Model.Items.Count)</h5>
+                        <button class="btn btn-outline-danger btn-sm" onclick="clearCart()">
+                            <i class="fas fa-trash me-1"></i><span class="d-none d-sm-inline">Clear Cart</span>
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <!-- Desktop Table View -->
+                        <div class="d-none d-md-block">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Product</th>
+                                        <th class="text-center" width="150">Quantity</th>
+                                        <th class="text-end" width="120">Price</th>
+                                        <th class="text-end" width="120">Total</th>
+                                        <th width="50"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cartItems">
+                                    @foreach (var item in Model.Items)
+                                    {
+                                        <tr data-item-id="@item.Id">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <img src="@(item.ImageUrl ?? "https://via.placeholder.com/60")" 
+                                                         class="rounded me-3" width="60" height="60" style="object-fit: cover;">
+                                                    <div>
+                                                        <h6 class="mb-0">
+                                                            @item.MedicineName
+                                                            @if (item.RequiresPrescription)
+                                                            {
+                                                                <span class="badge bg-warning text-dark ms-1" title="Prescription Required">
+                                                                    <i class="fas fa-file-prescription"></i> Rx
+                                                                </span>
+                                                            }
+                                                        </h6>
+                                                        <small class="text-muted">@item.GenericName</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="input-group input-group-sm" style="width: 120px; margin: 0 auto;">
+                                                    <button class="btn btn-outline-secondary" type="button" 
+                                                            onclick="updateQuantity(@item.Id, @(item.Quantity - 1))">
+                                                        <i class="fas fa-minus"></i>
+                                                    </button>
+                                                    <input type="number" class="form-control text-center quantity-input" 
+                                                           value="@item.Quantity" min="1" max="@item.AvailableStock"
+                                                           onchange="updateQuantity(@item.Id, this.value)">
+                                                    <button class="btn btn-outline-secondary" type="button"
+                                                            onclick="updateQuantity(@item.Id, @(item.Quantity + 1))">
+                                                        <i class="fas fa-plus"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                            <td class="text-end">₹@item.UnitPrice.ToString("N2")</td>
+                                            <td class="text-end fw-bold">₹@item.TotalPrice.ToString("N2")</td>
+                                            <td>
+                                                <button class="btn btn-link text-danger p-0" onclick="removeFromCart(@item.Id)">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Mobile Card View -->
+                        <div class="d-md-none">
+                            @foreach (var item in Model.Items)
+                            {
+                                <div class="cart-item-mobile p-3 border-bottom" data-item-id="@item.Id">
+                                    <div class="d-flex gap-3">
+                                        <img src="@(item.ImageUrl ?? "https://via.placeholder.com/80")" 
+                                             class="rounded" width="80" height="80" style="object-fit: cover;">
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="mb-1">
+                                                        @item.MedicineName
+                                                        @if (item.RequiresPrescription)
+                                                        {
+                                                            <span class="badge bg-warning text-dark ms-1" title="Prescription Required">
+                                                                <i class="fas fa-file-prescription"></i>
+                                                            </span>
+                                                        }
+                                                    </h6>
+                                                    <small class="text-muted d-block">@item.GenericName</small>
+                                                </div>
+                                                <button class="btn btn-link text-danger p-0" onclick="removeFromCart(@item.Id)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                                <div class="input-group input-group-sm" style="width: 110px;">
+                                                    <button class="btn btn-outline-secondary" type="button" 
+                                                            onclick="updateQuantity(@item.Id, @(item.Quantity - 1))">
+                                                        <i class="fas fa-minus"></i>
+                                                    </button>
+                                                    <input type="number" class="form-control text-center" 
+                                                           value="@item.Quantity" min="1" max="@item.AvailableStock"
+                                                           onchange="updateQuantity(@item.Id, this.value)" style="width: 45px;">
+                                                    <button class="btn btn-outline-secondary" type="button"
+                                                            onclick="updateQuantity(@item.Id, @(item.Quantity + 1))">
+                                                        <i class="fas fa-plus"></i>
+                                                    </button>
+                                                </div>
+                                                <div class="text-end">
+                                                    <small class="text-muted d-block">₹@item.UnitPrice.ToString("N2") each</small>
+                                                    <strong class="text-primary">₹@item.TotalPrice.ToString("N2")</strong>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <a asp-controller="Shop" asp-action="Index" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i><span class="d-none d-sm-inline">Continue</span> Shopping
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-4 mt-4 mt-lg-0">
+                <!-- Order Summary -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Order Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal</span>
+                            <span id="subtotal">₹@Model.SubTotal.ToString("N2")</span>
+                        </div>
+                        @if (Model.DiscountAmount > 0)
+                        {
+                            <div class="d-flex justify-content-between mb-2 text-success">
+                                <span>Discount (@Model.DiscountPercent%)</span>
+                                <span id="discount">-₹@Model.DiscountAmount.ToString("N2")</span>
+                            </div>
+                        }
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>GST (@(Model.GSTRate)%)</span>
+                            <span id="gst">₹@Model.TotalGSTAmount.ToString("N2")</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-3">
+                            <strong>Total</strong>
+                            <strong class="text-primary fs-5" id="total">₹@Model.TotalAmount.ToString("N2")</strong>
+                        </div>
+
+                        @if (Model.SubTotal < 500)
+                        {
+                            <div class="alert alert-info small mb-3">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Add ₹@((500 - Model.SubTotal).ToString("N2")) more to get 5% discount!
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-success small mb-3">
+                                <i class="fas fa-check-circle me-1"></i>
+                                You're getting 5% discount on this order!
+                            </div>
+                        }
+
+                        @if (Model.RequiresPrescription)
+                        {
+                            <div class="alert alert-warning small mb-3">
+                                <i class="fas fa-file-prescription me-1"></i>
+                                <strong>Prescription Required</strong>
+                                <p class="mb-1 mt-1">The following items require a valid prescription:</p>
+                                <ul class="mb-0 ps-3">
+                                    @foreach (var medicine in Model.PrescriptionMedicines ?? new List<string>())
+                                    {
+                                        <li>@medicine</li>
+                                    }
+                                </ul>
+                                <small class="d-block mt-1">You'll need to upload the prescription during checkout.</small>
+                            </div>
+                        }
+
+                        <a asp-controller="Checkout" asp-action="Index" class="btn btn-primary w-100 btn-lg">
+                            <i class="fas fa-lock me-2"></i>Proceed to Checkout
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Promo Code -->
+                <div class="card shadow-sm mt-3">
+                    <div class="card-body">
+                        <h6 class="mb-3">Have a promo code?</h6>
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Enter promo code">
+                            <button class="btn btn-outline-primary" type="button">Apply</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Safe Payment -->
+                <div class="card shadow-sm mt-3">
+                    <div class="card-body text-center">
+                        <i class="fas fa-shield-alt text-success fa-2x mb-2"></i>
+                        <h6>Secure Payment</h6>
+                        <small class="text-muted">All transactions are secure and encrypted</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="fas fa-shopping-cart fa-5x text-muted mb-4"></i>
+            <h3>Your cart is empty</h3>
+            <p class="text-muted mb-4">Looks like you haven't added any items to your cart yet.</p>
+            <a asp-controller="Shop" asp-action="Index" class="btn btn-primary btn-lg">
+                <i class="fas fa-shopping-bag me-2"></i>Start Shopping
+            </a>
+        </div>
+    }
+</div>
+
+<form method="post" id="antiForgeryForm">
+    @Html.AntiForgeryToken()
+</form>
+
+@section Scripts {
+    <script>
+        function updateQuantity(cartItemId, quantity) {
+            if (quantity < 1) {
+                removeFromCart(cartItemId);
+                return;
+            }
+
+            $.ajax({
+                url: '/Cart/Update',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ cartItemId: cartItemId, quantity: quantity }),
+                headers: {
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        showToast(response.message, 'error');
+                    }
+                },
+                error: function(xhr) {
+                    console.log('Update error:', xhr.responseText);
+                    showToast('Failed to update cart', 'error');
+                }
+            });
+        }
+
+        function removeFromCart(cartItemId) {
+            $.ajax({
+                url: '/Cart/Remove',
+                type: 'POST',
+                data: { id: cartItemId },
+                headers: {
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('tr[data-item-id="' + cartItemId + '"]').fadeOut(function() {
+                            $(this).remove();
+                            location.reload();
+                        });
+                    } else {
+                        showToast(response.message, 'error');
+                    }
+                },
+                error: function(xhr) {
+                    console.log('Remove error:', xhr.responseText);
+                    showToast('Failed to remove item', 'error');
+                }
+            });
+        }
+
+        function clearCart() {
+            if (confirm('Are you sure you want to clear your cart?')) {
+                $.ajax({
+                    url: '/Cart/Clear',
+                    type: 'POST',
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            location.reload();
+                        }
+                    }
+                });
+            }
+        }
+    </script>
+}

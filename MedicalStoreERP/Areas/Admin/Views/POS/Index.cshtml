@@ -1,0 +1,561 @@
+@model POSViewModel
+@{
+    ViewData["Title"] = "Point of Sale";
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0"><i class="fas fa-cash-register me-2"></i>Point of Sale</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item active">POS</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Left Panel - Product Search & Selection -->
+            <div class="col-lg-7">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-search me-2"></i>Search Products</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" id="searchInput" class="form-control form-control-lg" 
+                                   placeholder="Search by name, generic name, or batch number..." autofocus>
+                        </div>
+                        
+                        <div id="searchResults" class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                            <table class="table table-hover table-sm">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th>Medicine</th>
+                                        <th>Batch</th>
+                                        <th class="text-end">MRP</th>
+                                        <th class="text-end">Price</th>
+                                        <th class="text-center">Stock</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="medicineList">
+                                    @foreach (var med in Model.AvailableMedicines)
+                                    {
+                                        <tr class="medicine-row" data-id="@med.Id" data-name="@med.Name" 
+                                            data-batch="@med.BatchNo" data-hsn="@med.HSNCode"
+                                            data-mrp="@med.MRP" data-price="@med.SellingPrice" 
+                                            data-gst="@med.GSTPercent" data-stock="@med.AvailableStock">
+                                            <td>
+                                                <strong>@med.Name</strong><br>
+                                                <small class="text-muted">@med.GenericName</small>
+                                            </td>
+                                            <td><small>@med.BatchNo</small></td>
+                                            <td class="text-end">₹@med.MRP.ToString("N2")</td>
+                                            <td class="text-end text-primary fw-bold">₹@med.SellingPrice.ToString("N2")</td>
+                                            <td class="text-center">
+                                                <span class="badge @(med.AvailableStock < 10 ? "bg-warning" : "bg-success")">
+                                                    @med.AvailableStock
+                                                </span>
+                                            </td>
+                                            <td class="text-center">
+                                                <button class="btn btn-sm btn-primary add-to-cart" title="Add to cart">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Cart & Checkout -->
+            <div class="col-lg-5">
+                <!-- Cart -->
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="card-title mb-0"><i class="fas fa-shopping-cart me-2"></i>Current Sale</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="cartItems" style="max-height: 250px; overflow-y: auto;">
+                            <table class="table table-sm mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Item</th>
+                                        <th class="text-center" style="width: 100px;">Qty</th>
+                                        <th class="text-end">Total</th>
+                                        <th style="width: 40px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cartTableBody">
+                                    <tr id="emptyCartRow">
+                                        <td colspan="4" class="text-center text-muted py-4">
+                                            <i class="fas fa-shopping-cart fa-2x mb-2"></i>
+                                            <p class="mb-0">Cart is empty</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <table class="table table-sm table-borderless mb-0">
+                            <tr>
+                                <td>Subtotal</td>
+                                <td class="text-end" id="subtotal">₹0.00</td>
+                            </tr>
+                            <tr>
+                                <td>GST</td>
+                                <td class="text-end" id="totalGst">₹0.00</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="input-group input-group-sm" style="width: 150px;">
+                                        <span class="input-group-text">Discount</span>
+                                        <input type="number" id="discountAmount" class="form-control" value="0" min="0" step="0.01">
+                                    </div>
+                                </td>
+                                <td class="text-end text-danger" id="discountDisplay">-₹0.00</td>
+                            </tr>
+                            <tr class="border-top">
+                                <td><strong class="fs-5">Grand Total</strong></td>
+                                <td class="text-end"><strong class="fs-4 text-primary" id="grandTotal">₹0.00</strong></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Customer & Payment -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-user me-2"></i>Customer Details <span class="text-danger">*</span></h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label class="form-label small">Customer Name <span class="text-danger">*</span></label>
+                                <input type="text" id="customerName" class="form-control form-control-sm" placeholder="Customer Name" required>
+                                <div class="invalid-feedback">Customer name is required</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small">Phone Number <span class="text-danger">*</span></label>
+                                <input type="text" id="customerPhone" class="form-control form-control-sm" placeholder="Phone Number" pattern="[0-9]{10}" maxlength="10" required>
+                                <div class="invalid-feedback">Valid 10-digit phone number is required</div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small">Address</label>
+                                <input type="text" id="customerAddress" class="form-control form-control-sm" placeholder="Address (optional)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-credit-card me-2"></i>Payment</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small">Payment Method</label>
+                                <select id="paymentMethod" class="form-select">
+                                    <option value="0">Cash</option>
+                                    <option value="1">Card</option>
+                                    <option value="2">UPI</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small">Amount Received <span class="text-danger">*</span></label>
+                                <input type="number" id="amountReceived" class="form-control" value="0" min="0" step="0.01" required>
+                                <div class="invalid-feedback">Amount received is required and must cover total</div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="bg-light p-2 rounded text-center">
+                                    <small class="text-muted">Change</small>
+                                    <h4 class="mb-0 text-success" id="changeAmount">₹0.00</h4>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="bg-light p-2 rounded text-center">
+                                    <small class="text-muted">Balance Due</small>
+                                    <h4 class="mb-0 text-danger" id="balanceDue">₹0.00</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="d-grid gap-2">
+                            <button id="completeSale" class="btn btn-success btn-lg" disabled>
+                                <i class="fas fa-check-circle me-2"></i>Complete Sale (F12)
+                            </button>
+                            <button id="clearCart" class="btn btn-outline-danger">
+                                <i class="fas fa-trash me-2"></i>Clear Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+<script>
+    let cart = [];
+
+    $(document).ready(function() {
+        // Search medicines
+        let searchTimeout;
+        $('#searchInput').on('input', function() {
+            clearTimeout(searchTimeout);
+            const query = $(this).val();
+            searchTimeout = setTimeout(() => searchMedicines(query), 300);
+        });
+
+        // Add to cart button click
+        $(document).on('click', '.add-to-cart', function() {
+            const row = $(this).closest('.medicine-row');
+            addToCart(row);
+        });
+
+        // Double-click on row to add
+        $(document).on('dblclick', '.medicine-row', function() {
+            addToCart($(this));
+        });
+
+        // Quantity change in cart
+        $(document).on('change', '.cart-qty', function() {
+            const id = $(this).data('id');
+            const qty = parseInt($(this).val()) || 1;
+            updateCartItemQty(id, qty);
+        });
+
+        // Remove from cart
+        $(document).on('click', '.remove-from-cart', function() {
+            const id = $(this).data('id');
+            removeFromCart(id);
+        });
+
+        // Discount change
+        $('#discountAmount').on('input', function() {
+            updateTotals();
+        });
+
+        // Amount received change
+        $('#amountReceived').on('input', function() {
+            updatePayment();
+        });
+
+        // Clear cart
+        $('#clearCart').on('click', function() {
+            if (cart.length > 0 && confirm('Clear all items from cart?')) {
+                cart = [];
+                renderCart();
+            }
+        });
+
+        // Complete sale
+        $('#completeSale').on('click', completeSale);
+
+        // Keyboard shortcuts
+        $(document).on('keydown', function(e) {
+            if (e.key === 'F12') {
+                e.preventDefault();
+                $('#completeSale').click();
+            }
+        });
+    });
+
+    function searchMedicines(query) {
+        $.get('@Url.Action("SearchMedicines")', { query: query }, function(data) {
+            renderMedicineList(data);
+        });
+    }
+
+    function renderMedicineList(medicines) {
+        const tbody = $('#medicineList');
+        tbody.empty();
+
+        if (medicines.length === 0) {
+            tbody.append(`
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">
+                        No medicines found
+                    </td>
+                </tr>
+            `);
+            return;
+        }
+
+        medicines.forEach(med => {
+            tbody.append(`
+                <tr class="medicine-row" data-id="${med.id}" data-name="${med.name}" 
+                    data-batch="${med.batchNo}" data-hsn="${med.hsnCode}"
+                    data-mrp="${med.mrp}" data-price="${med.sellingPrice}" 
+                    data-gst="${med.gstPercent}" data-stock="${med.availableStock}">
+                    <td>
+                        <strong>${med.name}</strong><br>
+                        <small class="text-muted">${med.genericName}</small>
+                    </td>
+                    <td><small>${med.batchNo}</small></td>
+                    <td class="text-end">₹${med.mrp.toFixed(2)}</td>
+                    <td class="text-end text-primary fw-bold">₹${med.sellingPrice.toFixed(2)}</td>
+                    <td class="text-center">
+                        <span class="badge ${med.availableStock < 10 ? 'bg-warning' : 'bg-success'}">
+                            ${med.availableStock}
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-primary add-to-cart" title="Add to cart">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </td>
+                </tr>
+            `);
+        });
+    }
+
+    function addToCart(row) {
+        const id = row.data('id');
+        const stock = row.data('stock');
+        
+        const existing = cart.find(item => item.medicineId === id);
+        if (existing) {
+            if (existing.quantity >= stock) {
+                alert('Cannot add more. Stock limit reached.');
+                return;
+            }
+            existing.quantity++;
+            existing.gstAmount = (existing.unitPrice * existing.quantity * existing.gstPercent) / 100;
+            existing.totalPrice = (existing.unitPrice * existing.quantity) + existing.gstAmount;
+        } else {
+            const price = parseFloat(row.data('price'));
+            const gstPercent = parseFloat(row.data('gst'));
+            const gstAmount = (price * gstPercent) / 100;
+            
+            cart.push({
+                medicineId: id,
+                medicineName: row.data('name'),
+                batchNo: row.data('batch'),
+                hsnCode: row.data('hsn'),
+                quantity: 1,
+                unitPrice: price,
+                mrp: parseFloat(row.data('mrp')),
+                gstPercent: gstPercent,
+                gstAmount: gstAmount,
+                totalPrice: price + gstAmount,
+                availableStock: stock
+            });
+        }
+        
+        renderCart();
+    }
+
+    function updateCartItemQty(id, qty) {
+        const item = cart.find(i => i.medicineId === id);
+        if (item) {
+            if (qty > item.availableStock) {
+                qty = item.availableStock;
+                alert('Quantity adjusted to available stock.');
+            }
+            if (qty < 1) qty = 1;
+            
+            item.quantity = qty;
+            item.gstAmount = (item.unitPrice * qty * item.gstPercent) / 100;
+            item.totalPrice = (item.unitPrice * qty) + item.gstAmount;
+            renderCart();
+        }
+    }
+
+    function removeFromCart(id) {
+        cart = cart.filter(item => item.medicineId !== id);
+        renderCart();
+    }
+
+    function renderCart() {
+        const tbody = $('#cartTableBody');
+        tbody.empty();
+
+        if (cart.length === 0) {
+            tbody.append(`
+                <tr id="emptyCartRow">
+                    <td colspan="4" class="text-center text-muted py-4">
+                        <i class="fas fa-shopping-cart fa-2x mb-2"></i>
+                        <p class="mb-0">Cart is empty</p>
+                    </td>
+                </tr>
+            `);
+            $('#completeSale').prop('disabled', true);
+        } else {
+            cart.forEach(item => {
+                tbody.append(`
+                    <tr>
+                        <td>
+                            <strong>${item.medicineName}</strong><br>
+                            <small class="text-muted">₹${item.unitPrice.toFixed(2)} + ${item.gstPercent}% GST</small>
+                        </td>
+                        <td class="text-center">
+                            <input type="number" class="form-control form-control-sm cart-qty text-center" 
+                                   data-id="${item.medicineId}" value="${item.quantity}" 
+                                   min="1" max="${item.availableStock}" style="width: 70px;">
+                        </td>
+                        <td class="text-end">₹${item.totalPrice.toFixed(2)}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-danger remove-from-cart" data-id="${item.medicineId}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `);
+            });
+            $('#completeSale').prop('disabled', false);
+        }
+
+        updateTotals();
+    }
+
+    function updateTotals() {
+        const subtotal = cart.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
+        const totalGst = cart.reduce((sum, item) => sum + item.gstAmount, 0);
+        const discount = parseFloat($('#discountAmount').val()) || 0;
+        const grandTotal = subtotal + totalGst - discount;
+
+        $('#subtotal').text('₹' + subtotal.toFixed(2));
+        $('#totalGst').text('₹' + totalGst.toFixed(2));
+        $('#discountDisplay').text('-₹' + discount.toFixed(2));
+        $('#grandTotal').text('₹' + grandTotal.toFixed(2));
+
+        updatePayment();
+    }
+
+    function updatePayment() {
+        const subtotal = cart.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
+        const totalGst = cart.reduce((sum, item) => sum + item.gstAmount, 0);
+        const discount = parseFloat($('#discountAmount').val()) || 0;
+        const grandTotal = subtotal + totalGst - discount;
+        const received = parseFloat($('#amountReceived').val()) || 0;
+
+        if (received >= grandTotal) {
+            $('#changeAmount').text('₹' + (received - grandTotal).toFixed(2));
+            $('#balanceDue').text('₹0.00');
+        } else {
+            $('#changeAmount').text('₹0.00');
+            $('#balanceDue').text('₹' + (grandTotal - received).toFixed(2));
+        }
+    }
+
+    function completeSale() {
+        if (cart.length === 0) {
+            alert('Cart is empty');
+            return;
+        }
+
+        // Reset validation states
+        $('#customerName, #customerPhone, #amountReceived').removeClass('is-invalid');
+
+        // Validate customer name
+        const customerName = $('#customerName').val().trim();
+        if (!customerName) {
+            $('#customerName').addClass('is-invalid').focus();
+            alert('Customer name is required');
+            return;
+        }
+
+        // Validate phone number (10 digits)
+        const customerPhone = $('#customerPhone').val().trim();
+        const phoneRegex = /^[0-9]{10}$/;
+        if (!customerPhone || !phoneRegex.test(customerPhone)) {
+            $('#customerPhone').addClass('is-invalid').focus();
+            alert('Valid 10-digit phone number is required');
+            return;
+        }
+
+        const subtotal = cart.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
+        const totalGst = cart.reduce((sum, item) => sum + item.gstAmount, 0);
+        const discount = parseFloat($('#discountAmount').val()) || 0;
+        const grandTotal = subtotal + totalGst - discount;
+        const received = parseFloat($('#amountReceived').val()) || 0;
+
+        // Validate amount received
+        if (received <= 0) {
+            $('#amountReceived').addClass('is-invalid').focus();
+            alert('Amount received is required');
+            return;
+        }
+
+        if (received < grandTotal) {
+            $('#amountReceived').addClass('is-invalid').focus();
+            alert('Amount received (₹' + received.toFixed(2) + ') must be at least equal to Grand Total (₹' + grandTotal.toFixed(2) + ')');
+            return;
+        }
+
+        const request = {
+            customerName: customerName,
+            customerPhone: customerPhone,
+            customerAddress: $('#customerAddress').val() || null,
+            paymentMethod: parseInt($('#paymentMethod').val()),
+            discountAmount: discount,
+            amountReceived: received,
+            notes: null,
+            items: cart.map(item => ({
+                medicineId: item.medicineId,
+                quantity: item.quantity
+            }))
+        };
+
+        $('#completeSale').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Processing...');
+
+        $.ajax({
+            url: '@Url.Action("CreateSale")',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(request),
+            headers: {
+                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Open invoice in new tab
+                    window.open('@Url.Action("Invoice")/' + response.saleId, '_blank');
+                    
+                    // Reset form
+                    cart = [];
+                    renderCart();
+                    $('#customerName, #customerPhone, #customerAddress').val('');
+                    $('#discountAmount, #amountReceived').val(0);
+                    $('#searchInput').val('').focus();
+                    searchMedicines('');
+                    
+                    alert('Sale completed! Invoice: ' + response.invoiceNumber);
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            },
+            error: function(xhr) {
+                const response = xhr.responseJSON;
+                alert('Error: ' + (response?.message || 'Failed to complete sale'));
+            },
+            complete: function() {
+                $('#completeSale').prop('disabled', cart.length === 0)
+                    .html('<i class="fas fa-check-circle me-2"></i>Complete Sale (F12)');
+            }
+        });
+    }
+</script>
+}
+
+@Html.AntiForgeryToken()

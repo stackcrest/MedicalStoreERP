@@ -1,0 +1,208 @@
+@model ProfileViewModel
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+            <li class="breadcrumb-item active">My Profile</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="avatar bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                         style="width: 100px; height: 100px; font-size: 2.5rem;">
+                        @Model.FullName.Substring(0, 1).ToUpper()
+                    </div>
+                    <h4 class="mb-1">@Model.FullName</h4>
+                    <p class="text-muted mb-3">@Model.Email</p>
+                    <div class="d-grid gap-2">
+                        <a asp-controller="Orders" asp-action="Index" class="btn btn-outline-primary">
+                            <i class="fas fa-box me-2"></i>My Orders
+                        </a>
+                        <a asp-controller="Wishlist" asp-action="Index" class="btn btn-outline-danger">
+                            <i class="fas fa-heart me-2"></i>Wishlist
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Quick Stats</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <h5 class="mb-0">@Model.TotalOrders</h5>
+                            <small class="text-muted">Orders</small>
+                        </div>
+                        <div class="col-4">
+                            <h5 class="mb-0">@Model.WishlistCount</h5>
+                            <small class="text-muted">Wishlist</small>
+                        </div>
+                        <div class="col-4">
+                            <h5 class="mb-0">₹@Model.TotalSpent.ToString("N0")</h5>
+                            <small class="text-muted">Spent</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Profile Form -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-user me-2"></i>Personal Information</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="UpdateProfile" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="FullName" class="form-label">Full Name *</label>
+                                <input asp-for="FullName" class="form-control" required>
+                                <span asp-validation-for="FullName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Email" class="form-label">Email Address</label>
+                                <input asp-for="Email" class="form-control" readonly>
+                                <small class="text-muted">Email cannot be changed</small>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
+                                <input asp-for="PhoneNumber" class="form-control" placeholder="+91 9876543210">
+                                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Member Since</label>
+                                <input type="text" class="form-control" value="@Model.MemberSince.ToString("dd MMMM yyyy")" readonly>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Address" class="form-label">Default Shipping Address</label>
+                            <textarea asp-for="Address" class="form-control" rows="3" 
+                                      placeholder="Enter your complete address including city, state and pincode"></textarea>
+                            <span asp-validation-for="Address" class="text-danger"></span>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Update Profile
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Change Password -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-lock me-2"></i>Change Password</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="ChangePassword" method="post">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Current Password *</label>
+                                <input type="password" name="CurrentPassword" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">New Password *</label>
+                                <input type="password" name="NewPassword" class="form-control" required
+                                       pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}" 
+                                       title="Must contain at least one number, one uppercase and lowercase letter, and at least 6 characters">
+                                <small class="text-muted">Min 6 characters with uppercase, lowercase and number</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Confirm New Password *</label>
+                                <input type="password" name="ConfirmPassword" class="form-control" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-key me-2"></i>Change Password
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Recent Orders -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-box me-2"></i>Recent Orders</h5>
+                    <a asp-controller="Orders" asp-action="Index" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.RecentOrders?.Any() == true)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Order #</th>
+                                        <th>Date</th>
+                                        <th>Items</th>
+                                        <th class="text-end">Total</th>
+                                        <th>Status</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var order in Model.RecentOrders.Take(5))
+                                    {
+                                        <tr>
+                                            <td><strong>@order.OrderNumber</strong></td>
+                                            <td>@order.OrderDate.ToString("dd MMM yyyy")</td>
+                                            <td>@order.ItemCount items</td>
+                                            <td class="text-end">₹@order.TotalAmount.ToString("N2")</td>
+                                            <td>
+                                                <span class="badge @(order.Status == "Delivered" ? "bg-success" : 
+                                                                      order.Status == "Cancelled" ? "bg-danger" : 
+                                                                      order.Status == "Shipped" ? "bg-info" : "bg-warning text-dark")">
+                                                    @order.Status
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a asp-controller="Orders" asp-action="Details" asp-route-id="@order.Id" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    View
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-box-open fa-3x mb-3 d-block"></i>
+                            <p>No orders yet</p>
+                            <a asp-controller="Shop" asp-action="Index" class="btn btn-primary">Start Shopping</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

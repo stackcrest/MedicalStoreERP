@@ -1,0 +1,232 @@
+@model SupplierLedgerViewModel
+@{
+    ViewData["Title"] = "Supplier Ledger";
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Supplier Ledger</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Suppliers</a></li>
+                    <li class="breadcrumb-item active">Ledger</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-9">
+                <!-- Supplier Info -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <h4 class="mb-1">@Model.SupplierName</h4>
+                                <p class="text-muted mb-0">
+                                    <i class="fas fa-phone me-2"></i>@Model.SupplierPhone
+                                    @if (!string.IsNullOrEmpty(Model.SupplierEmail))
+                                    {
+                                        <span class="ms-3"><i class="fas fa-envelope me-2"></i>@Model.SupplierEmail</span>
+                                    }
+                                </p>
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                <span class="badge @(Model.CurrentBalance > 0 ? "bg-danger" : Model.CurrentBalance < 0 ? "bg-success" : "bg-secondary") fs-6 p-2">
+                                    Current Balance: ₹@Math.Abs(Model.CurrentBalance).ToString("N2")
+                                    @if (Model.CurrentBalance > 0)
+                                    {
+                                        <span>(Payable)</span>
+                                    }
+                                    else if (Model.CurrentBalance < 0)
+                                    {
+                                        <span>(Receivable)</span>
+                                    }
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter -->
+                <div class="card">
+                    <div class="card-body">
+                        <form method="get" class="row g-3 align-items-end">
+                            <div class="col-md-4">
+                                <label class="form-label">From Date</label>
+                                <input type="date" name="fromDate" class="form-control" value="@Model.FromDate?.ToString("yyyy-MM-dd")">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">To Date</label>
+                                <input type="date" name="toDate" class="form-control" value="@Model.ToDate?.ToString("yyyy-MM-dd")">
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-filter me-2"></i>Filter
+                                </button>
+                                <a asp-action="Ledger" asp-route-id="@Model.SupplierId" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-2"></i>Clear
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Ledger Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-book me-2"></i>Ledger Entries</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-outline-success btn-sm" onclick="window.print()">
+                                <i class="fas fa-print me-1"></i>Print
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Reference</th>
+                                    <th class="text-end">Debit</th>
+                                    <th class="text-end">Credit</th>
+                                    <th class="text-end">Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.Entries?.Any() == true)
+                                {
+                                    var runningBalance = Model.OpeningBalance;
+                                    <tr class="table-secondary">
+                                        <td colspan="5"><strong>Opening Balance</strong></td>
+                                        <td class="text-end"><strong>₹@Model.OpeningBalance.ToString("N2")</strong></td>
+                                    </tr>
+                                    @foreach (var entry in Model.Entries.OrderBy(e => e.Date))
+                                    {
+                                        runningBalance += entry.Debit - entry.Credit;
+                                        <tr>
+                                            <td>@entry.Date.ToString("dd MMM yyyy")</td>
+                                            <td>@entry.Description</td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(entry.Reference))
+                                                {
+                                                    <code>@entry.Reference</code>
+                                                }
+                                            </td>
+                                            <td class="text-end @(entry.Debit > 0 ? "text-danger" : "")">
+                                                @(entry.Debit > 0 ? "₹" + entry.Debit.ToString("N2") : "-")
+                                            </td>
+                                            <td class="text-end @(entry.Credit > 0 ? "text-success" : "")">
+                                                @(entry.Credit > 0 ? "₹" + entry.Credit.ToString("N2") : "-")
+                                            </td>
+                                            <td class="text-end">
+                                                <strong class="@(runningBalance > 0 ? "text-danger" : runningBalance < 0 ? "text-success" : "")">
+                                                    ₹@Math.Abs(runningBalance).ToString("N2")
+                                                    @(runningBalance > 0 ? " Dr" : runningBalance < 0 ? " Cr" : "")
+                                                </strong>
+                                            </td>
+                                        </tr>
+                                    }
+                                    <tr class="table-primary">
+                                        <td colspan="3"><strong>Closing Balance</strong></td>
+                                        <td class="text-end"><strong>₹@Model.TotalDebit.ToString("N2")</strong></td>
+                                        <td class="text-end"><strong>₹@Model.TotalCredit.ToString("N2")</strong></td>
+                                        <td class="text-end">
+                                            <strong class="@(Model.CurrentBalance > 0 ? "text-danger" : Model.CurrentBalance < 0 ? "text-success" : "")">
+                                                ₹@Math.Abs(Model.CurrentBalance).ToString("N2")
+                                                @(Model.CurrentBalance > 0 ? " Dr" : Model.CurrentBalance < 0 ? " Cr" : "")
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">
+                                            <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                            No ledger entries found
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3">
+                <!-- Summary -->
+                <div class="card">
+                    <div class="card-header bg-primary">
+                        <h3 class="card-title text-white"><i class="fas fa-calculator me-2"></i>Summary</h3>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless table-sm mb-0">
+                            <tr>
+                                <td>Opening Balance:</td>
+                                <td class="text-end">₹@Model.OpeningBalance.ToString("N2")</td>
+                            </tr>
+                            <tr>
+                                <td>Total Debit:</td>
+                                <td class="text-end text-danger">₹@Model.TotalDebit.ToString("N2")</td>
+                            </tr>
+                            <tr>
+                                <td>Total Credit:</td>
+                                <td class="text-end text-success">₹@Model.TotalCredit.ToString("N2")</td>
+                            </tr>
+                            <tr class="border-top">
+                                <td><strong>Closing Balance:</strong></td>
+                                <td class="text-end">
+                                    <strong class="@(Model.CurrentBalance > 0 ? "text-danger" : "text-success")">
+                                        ₹@Math.Abs(Model.CurrentBalance).ToString("N2")
+                                    </strong>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="card">
+                    <div class="card-body">
+                        <a asp-action="Details" asp-route-id="@Model.SupplierId" class="btn btn-outline-info w-100 mb-2">
+                            <i class="fas fa-eye me-2"></i>View Supplier
+                        </a>
+                        <a asp-controller="GRN" asp-action="Create" asp-route-supplierId="@Model.SupplierId" class="btn btn-primary w-100 mb-2">
+                            <i class="fas fa-plus me-2"></i>Create GRN
+                        </a>
+                        <a asp-action="Index" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Suppliers
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Legend -->
+                <div class="card bg-light">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-info-circle me-2"></i>Legend</h3>
+                    </div>
+                    <div class="card-body small">
+                        <p class="mb-1"><span class="text-danger">Debit (Dr)</span> = We owe supplier</p>
+                        <p class="mb-0"><span class="text-success">Credit (Cr)</span> = Payment made</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    @@media print {
+        .content-header, .card-tools, .col-lg-3, form { display: none !important; }
+        .col-lg-9 { width: 100% !important; max-width: 100% !important; }
+    }
+</style>

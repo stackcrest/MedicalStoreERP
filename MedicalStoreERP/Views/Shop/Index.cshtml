@@ -1,0 +1,282 @@
+@model MedicineListViewModel
+@{
+    ViewData["Title"] = "Shop";
+}
+
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+            <li class="breadcrumb-item active">Shop</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Sidebar Filters -->
+        <div class="col-lg-3 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Index" method="get">
+                        <!-- Search -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Search</label>
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" name="search" class="form-control" placeholder="Search medicines..." 
+                                       value="@ViewBag.Search">
+                            </div>
+                        </div>
+
+                        <!-- Categories -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Categories</label>
+                            @if (ViewBag.Categories != null)
+                            {
+                                @foreach (var category in (IEnumerable<Category>)ViewBag.Categories)
+                                {
+                                    <div class="form-check">
+                                        <input type="radio" name="categoryId" value="@category.Id" class="form-check-input"
+                                               @(ViewBag.CategoryId != null && (int)ViewBag.CategoryId == category.Id ? "checked" : "")>
+                                        <label class="form-check-label">@category.Name</label>
+                                    </div>
+                                }
+                            }
+                        </div>
+
+                        <!-- Price Range -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Price Range</label>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <input type="number" name="minPrice" class="form-control" placeholder="Min" 
+                                           value="@ViewBag.MinPrice">
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" name="maxPrice" class="form-control" placeholder="Max"
+                                           value="@ViewBag.MaxPrice">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sort -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Sort By</label>
+                            <select name="sortBy" class="form-select" id="sortBy">
+                                <option value="name">Name (A-Z)</option>
+                                <option value="name_desc">Name (Z-A)</option>
+                                <option value="price">Price (Low to High)</option>
+                                <option value="price_desc">Price (High to Low)</option>
+                                <option value="newest">Newest First</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mb-2">
+                            <i class="fas fa-filter me-2"></i>Apply Filters
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-redo me-2"></i>Clear Filters
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="col-lg-9">
+            <!-- Results Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="mb-1">All Products</h4>
+                    <p class="text-muted mb-0">Showing @Model.Medicines.Count of @Model.TotalItems products</p>
+                </div>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-secondary active" id="gridView">
+                        <i class="fas fa-th"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="listView">
+                        <i class="fas fa-list"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Products Grid -->
+            <div class="row g-4" id="productsGrid">
+                @if (Model.Medicines.Any())
+                {
+                    @foreach (var medicine in Model.Medicines)
+                    {
+                        var stockClass = medicine.StockQty == 0 ? "stock-out" : medicine.IsLowStock ? "stock-low" : "stock-in";
+                        var stockText = medicine.StockQty == 0 ? "Out of Stock" : medicine.IsLowStock ? "Low Stock" : "In Stock";
+                        var stockIcon = medicine.StockQty == 0 ? "times-circle" : medicine.IsLowStock ? "exclamation-circle" : "check-circle";
+
+                        <div class="col-lg-4 col-md-6 product-item">
+                            <div class="card product-card h-100">
+                                <div class="position-relative">
+                                    <a asp-action="Details" asp-route-id="@medicine.Id">
+                                        <img src="@(medicine.ImageUrl ?? "https://via.placeholder.com/300x200?text=" + Uri.EscapeDataString(medicine.Name))" 
+                                             class="card-img-top" alt="@medicine.Name">
+                                    </a>
+                                    @if (medicine.DiscountPercent > 0)
+                                    {
+                                        <span class="product-badge">
+                                            <span class="discount-badge">@medicine.DiscountPercent.ToString("N0")% OFF</span>
+                                        </span>
+                                    }
+                                    @if (User.Identity?.IsAuthenticated == true)
+                                    {
+                                        <button class="wishlist-btn" onclick="toggleWishlist(@medicine.Id, this)">
+                                            <i class="far fa-heart"></i>
+                                        </button>
+                                    }
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <small class="text-muted">@medicine.CategoryName</small>
+                                        @if (medicine.RequiresPrescription)
+                                        {
+                                            <span class="badge bg-warning text-dark" style="font-size: 0.65rem;" title="Prescription Required">
+                                                <i class="fas fa-file-prescription"></i> Rx
+                                            </span>
+                                        }
+                                    </div>
+                                    <h6 class="card-title mt-1">
+                                        <a asp-action="Details" asp-route-id="@medicine.Id" class="text-decoration-none text-dark">
+                                            @medicine.Name
+                                        </a>
+                                    </h6>
+                                    <small class="text-muted d-block mb-2">@medicine.GenericName</small>
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <span class="price-current">₹@medicine.SalePrice.ToString("N2")</span>
+                                        @if (medicine.DiscountPercent > 0)
+                                        {
+                                            var originalPrice = medicine.SalePrice / (1 - (medicine.DiscountPercent / 100));
+                                            <span class="price-original">₹@originalPrice.ToString("N2")</span>
+                                        }
+                                    </div>
+                                    <small class="stock-status @stockClass">
+                                        <i class="fas fa-@stockIcon me-1"></i>@stockText
+                                    </small>
+                                </div>
+                                <div class="card-footer bg-transparent border-0 pt-0">
+                                    @if (medicine.StockQty > 0 && !medicine.IsExpired)
+                                    {
+                                        @if (User.Identity?.IsAuthenticated == true)
+                                        {
+                                            @if (!User.IsInRole("Admin") && !User.IsInRole("SuperAdmin"))
+                                            {
+                                            <button class="btn btn-primary w-100" onclick="addToCart(@medicine.Id)">
+                                                <i class="fas fa-cart-plus me-2"></i>Add to Cart
+                                            </button>
+                                            }
+                                            else
+                                            {
+                                            <span class="btn btn-secondary w-100 disabled">
+                                                <i class="fas fa-eye me-2"></i>View Only (Admin)
+                                            </span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary w-100">
+                                                <i class="fas fa-sign-in-alt me-2"></i>Login to Buy
+                                            </a>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-secondary w-100" disabled>
+                                            <i class="fas fa-times me-2"></i>Unavailable
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="col-12">
+                        <div class="text-center py-5">
+                            <i class="fas fa-search fa-4x text-muted mb-3"></i>
+                            <h4>No products found</h4>
+                            <p class="text-muted">Try adjusting your search or filter criteria</p>
+                            <a asp-action="Index" class="btn btn-primary">View All Products</a>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Pagination -->
+            @if (Model.TotalPages > 1)
+            {
+                <nav class="mt-5">
+                    <ul class="pagination justify-content-center">
+                        @if (Model.CurrentPage > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)"
+                                   asp-route-search="@ViewBag.Search" asp-route-categoryId="@ViewBag.CategoryId"
+                                   asp-route-sortBy="@ViewBag.SortBy">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                        }
+
+                        @for (int i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++)
+                        {
+                            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                <a class="page-link" asp-action="Index" asp-route-page="@i"
+                                   asp-route-search="@ViewBag.Search" asp-route-categoryId="@ViewBag.CategoryId"
+                                   asp-route-sortBy="@ViewBag.SortBy">@i</a>
+                            </li>
+                        }
+
+                        @if (Model.CurrentPage < Model.TotalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)"
+                                   asp-route-search="@ViewBag.Search" asp-route-categoryId="@ViewBag.CategoryId"
+                                   asp-route-sortBy="@ViewBag.SortBy">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+        </div>
+    </div>
+</div>
+
+<form method="post" id="antiForgeryForm">
+    @Html.AntiForgeryToken()
+</form>
+
+@section Scripts {
+    <script>
+        // Set the selected sort value
+        $(document).ready(function() {
+            var sortBy = '@ViewBag.SortBy';
+            if (sortBy) {
+                $('#sortBy').val(sortBy);
+            }
+        });
+        
+        // View toggle (grid/list)
+        $('#gridView').click(function() {
+            $(this).addClass('active');
+            $('#listView').removeClass('active');
+            $('.product-item').removeClass('col-12').addClass('col-lg-4 col-md-6');
+        });
+
+        $('#listView').click(function() {
+            $(this).addClass('active');
+            $('#gridView').removeClass('active');
+            $('.product-item').removeClass('col-lg-4 col-md-6').addClass('col-12');
+        });
+    </script>
+}

@@ -1,0 +1,255 @@
+@model MedicalStoreERP.Models.Medicine
+@{
+    ViewData["Title"] = "Medicine Details";
+}
+
+<!-- Content Header -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Medicine Details</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-action="Index" asp-controller="Dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Medicines</a></li>
+                    <li class="breadcrumb-item active">Details</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-8">
+                <!-- Basic Info Card -->
+                <div class="card card-primary card-outline">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-pills me-2"></i>@Model.Name
+                        </h3>
+                        <div class="card-tools">
+                            @if (Model.IsActive)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Inactive</span>
+                            }
+                            @if (Model.IsFeatured)
+                            {
+                                <span class="badge bg-warning ms-1">Featured</span>
+                            }
+                            @if (Model.RequiresPrescription)
+                            {
+                                <span class="badge bg-info ms-1">Rx Required</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <dl class="row">
+                                    <dt class="col-sm-5">Generic Name:</dt>
+                                    <dd class="col-sm-7">@Model.GenericName</dd>
+
+                                    <dt class="col-sm-5">Category:</dt>
+                                    <dd class="col-sm-7">@Model.Category?.Name</dd>
+
+                                    <dt class="col-sm-5">Manufacturer:</dt>
+                                    <dd class="col-sm-7">@(Model.Manufacturer ?? "N/A")</dd>
+
+                                    <dt class="col-sm-5">Composition:</dt>
+                                    <dd class="col-sm-7">@(Model.Composition ?? "N/A")</dd>
+
+                                    <dt class="col-sm-5">Dosage:</dt>
+                                    <dd class="col-sm-7">@(Model.Dosage ?? "N/A")</dd>
+
+                                    <dt class="col-sm-5">Pack Size:</dt>
+                                    <dd class="col-sm-7">@(Model.PackSize ?? "N/A")</dd>
+                                </dl>
+                            </div>
+                            <div class="col-md-6">
+                                <dl class="row">
+                                    <dt class="col-sm-5">Batch No:</dt>
+                                    <dd class="col-sm-7"><code>@Model.BatchNo</code></dd>
+
+                                    <dt class="col-sm-5">HSN Code:</dt>
+                                    <dd class="col-sm-7"><code>@Model.HSNCode</code></dd>
+
+                                    <dt class="col-sm-5">GST:</dt>
+                                    <dd class="col-sm-7">@Model.GSTPercent%</dd>
+
+                                    <dt class="col-sm-5">Manufacture Date:</dt>
+                                    <dd class="col-sm-7">@Model.ManufactureDate.ToString("dd/MM/yyyy")</dd>
+
+                                    <dt class="col-sm-5">Expiry Date:</dt>
+                                    <dd class="col-sm-7">
+                                        @Model.ExpiryDate.ToString("dd/MM/yyyy")
+                                        @if (Model.IsExpired)
+                                        {
+                                            <span class="badge bg-danger ms-1">Expired</span>
+                                        }
+                                        else if (Model.IsNearExpiry)
+                                        {
+                                            <span class="badge bg-warning ms-1">Expiring Soon</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-5">Created:</dt>
+                                    <dd class="col-sm-7">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</dd>
+                                </dl>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(Model.Description))
+                        {
+                            <hr />
+                            <h6><i class="fas fa-info-circle me-1"></i>Description</h6>
+                            <p class="text-muted">@Model.Description</p>
+                        }
+                    </div>
+                </div>
+
+                <!-- Pricing Card -->
+                <div class="card card-success card-outline">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-rupee-sign me-2"></i>Pricing Information
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-4">
+                                <div class="info-box bg-light">
+                                    <div class="info-box-content">
+                                        <span class="info-box-text text-muted">Purchase Price</span>
+                                        <span class="info-box-number text-primary">₹@Model.PurchasePrice.ToString("N2")</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="info-box bg-light">
+                                    <div class="info-box-content">
+                                        <span class="info-box-text text-muted">Sale Price</span>
+                                        <span class="info-box-number text-success">₹@Model.SalePrice.ToString("N2")</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="info-box bg-light">
+                                    <div class="info-box-content">
+                                        <span class="info-box-text text-muted">MRP</span>
+                                        <span class="info-box-number text-info">₹@Model.MRP.ToString("N2")</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <p class="mb-1">
+                                    <strong>Profit Margin:</strong>
+                                    <span class="text-success">
+                                        ₹@((Model.SalePrice - Model.PurchasePrice).ToString("N2"))
+                                        (@(Model.PurchasePrice > 0 ? ((Model.SalePrice - Model.PurchasePrice) / Model.PurchasePrice * 100).ToString("N1") : "0")%)
+                                    </span>
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-1">
+                                    <strong>Discount from MRP:</strong>
+                                    <span class="text-info">
+                                        ₹@((Model.MRP - Model.SalePrice).ToString("N2"))
+                                        (@(Model.MRP > 0 ? ((Model.MRP - Model.SalePrice) / Model.MRP * 100).ToString("N1") : "0")%)
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <!-- Stock Card -->
+                <div class="card @(Model.IsLowStock ? "card-warning" : "card-info") card-outline">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-boxes me-2"></i>Stock Information
+                        </h3>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="display-4 @(Model.IsLowStock ? "text-warning" : "text-info")">
+                            @Model.StockQty
+                        </div>
+                        <p class="text-muted">Units in Stock</p>
+
+                        @if (Model.IsLowStock)
+                        {
+                            <div class="alert alert-warning mt-3 mb-0">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                <strong>Low Stock Alert!</strong><br />
+                                Stock is below reorder level (@Model.ReorderLevel units)
+                            </div>
+                        }
+
+                        <hr />
+                        <dl class="row mb-0">
+                            <dt class="col-6 text-start">Reorder Level:</dt>
+                            <dd class="col-6 text-end">@Model.ReorderLevel units</dd>
+
+                            <dt class="col-6 text-start">Stock Value:</dt>
+                            <dd class="col-6 text-end">₹@((Model.StockQty * Model.PurchasePrice).ToString("N2"))</dd>
+
+                            <dt class="col-6 text-start">Sale Value:</dt>
+                            <dd class="col-6 text-end">₹@((Model.StockQty * Model.SalePrice).ToString("N2"))</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Image Card -->
+                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-image me-2"></i>Product Image
+                            </h3>
+                        </div>
+                        <div class="card-body text-center">
+                            <img src="@Model.ImageUrl" alt="@Model.Name" class="img-fluid rounded" style="max-height: 250px;" />
+                        </div>
+                    </div>
+                }
+
+                <!-- Actions Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-cogs me-2"></i>Actions
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                                <i class="fas fa-edit me-2"></i>Edit Medicine
+                            </a>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to List
+                            </a>
+                            <form asp-action="Delete" asp-route-id="@Model.Id" method="post" 
+                                  onsubmit="return confirm('Are you sure you want to delete this medicine?');">
+                                <button type="submit" class="btn btn-danger w-100">
+                                    <i class="fas fa-trash me-2"></i>Delete Medicine
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

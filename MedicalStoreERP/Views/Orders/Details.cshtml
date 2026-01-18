@@ -1,0 +1,268 @@
+@model OrderViewModel
+@{
+    ViewData["Title"] = "Order Details";
+}
+
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">My Orders</a></li>
+            <li class="breadcrumb-item active">@Model.OrderNumber</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Order Header -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-box me-2"></i>Order #@Model.OrderNumber
+                    </h5>
+                    <span class="badge @GetStatusBadgeClass(Model.Status) fs-6">@Model.Status</span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Order Date:</strong> @Model.OrderDate.ToString("dd MMM yyyy, hh:mm tt")</p>
+                            <p class="mb-1"><strong>Payment Method:</strong> @Model.PaymentMethod</p>
+                            <p class="mb-0"><strong>Payment Status:</strong> 
+                                <span class="badge @(Model.PaymentStatus == PaymentStatus.Completed ? "bg-success" : "bg-warning text-dark")">
+                                    @Model.PaymentStatus
+                                </span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            @if (Model.ShippedAt.HasValue)
+                            {
+                                <p class="mb-1"><strong>Shipped Date:</strong> @Model.ShippedAt.Value.ToString("dd MMM yyyy")</p>
+                            }
+                            @if (Model.DeliveredAt.HasValue)
+                            {
+                                <p class="mb-1"><strong>Delivered Date:</strong> @Model.DeliveredAt.Value.ToString("dd MMM yyyy")</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Timeline -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-truck me-2"></i>Order Progress</h6>
+                </div>
+                <div class="card-body">
+                    <div class="order-timeline">
+                        @{
+                            var statuses = new[] { OrderStatus.Pending, OrderStatus.Processing, OrderStatus.Shipped, OrderStatus.Delivered };
+                            var currentIndex = Array.IndexOf(statuses, Model.Status);
+                            if (Model.Status == OrderStatus.Cancelled) currentIndex = -1;
+                        }
+                        <div class="d-flex justify-content-between position-relative">
+                            @for (int i = 0; i < statuses.Length; i++)
+                            {
+                                var isCompleted = i <= currentIndex;
+                                var isCurrent = i == currentIndex;
+                                <div class="text-center" style="width: 25%;">
+                                    <div class="timeline-dot @(isCompleted ? "bg-success" : "bg-secondary") @(isCurrent ? "border border-3 border-success" : "")">
+                                        <i class="fas @GetStatusIcon(statuses[i].ToString()) text-white"></i>
+                                    </div>
+                                    <p class="small mt-2 mb-0 @(isCompleted ? "fw-bold text-success" : "text-muted")">@statuses[i]</p>
+                                </div>
+                            }
+                            <div class="timeline-line"></div>
+                        </div>
+                    </div>
+                    @if (Model.Status == OrderStatus.Cancelled)
+                    {
+                        <div class="alert alert-danger mt-3 mb-0">
+                            <i class="fas fa-times-circle me-2"></i>
+                            This order was cancelled.
+                            @if (!string.IsNullOrEmpty(Model.Notes))
+                            {
+                                <br><small>Reason: @Model.Notes</small>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-list me-2"></i>Order Items (@Model.Items.Count)</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Product</th>
+                                    <th class="text-center">Qty</th>
+                                    <th class="text-end">Price</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.Items)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-light rounded me-3 p-2 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                                    <i class="fas fa-pills fa-2x text-muted"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0">@item.MedicineName</h6>
+                                                    <small class="text-muted">Batch: @item.BatchNo</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center align-middle">@item.Quantity</td>
+                                        <td class="text-end align-middle">₹@item.UnitPrice.ToString("N2")</td>
+                                        <td class="text-end align-middle"><strong>₹@item.TotalPrice.ToString("N2")</strong></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Order Summary -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-receipt me-2"></i>Order Summary</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <td>Subtotal</td>
+                            <td class="text-end">₹@Model.SubTotal.ToString("N2")</td>
+                        </tr>
+                        @if (Model.DiscountAmount > 0)
+                        {
+                            <tr class="text-success">
+                                <td>Discount</td>
+                                <td class="text-end">-₹@Model.DiscountAmount.ToString("N2")</td>
+                            </tr>
+                        }
+                        <tr>
+                            <td>GST</td>
+                            <td class="text-end">₹@Model.TotalGSTAmount.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td>Shipping</td>
+                            <td class="text-end">@(Model.ShippingCharges > 0 ? "₹" + Model.ShippingCharges.ToString("N2") : "Free")</td>
+                        </tr>
+                        <tr class="border-top">
+                            <td><strong>Total</strong></td>
+                            <td class="text-end"><strong class="text-primary fs-5">₹@Model.TotalAmount.ToString("N2")</strong></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Shipping Address -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Shipping Address</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">@Model.DeliveryAddress, @Model.City, @Model.State - @Model.PinCode</p>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card">
+                <div class="card-body">
+                    @if (Model.Status == OrderStatus.Delivered || Model.Status == OrderStatus.Shipped)
+                    {
+                        <a asp-controller="Orders" asp-action="Invoice" asp-route-id="@Model.Id" 
+                           class="btn btn-primary w-100 mb-2" target="_blank">
+                            <i class="fas fa-file-pdf me-2"></i>Download Invoice
+                        </a>
+                    }
+                    @if (Model.Status == OrderStatus.Pending)
+                    {
+                        <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" 
+                              onsubmit="return confirm('Are you sure you want to cancel this order?');">
+                            <button type="submit" class="btn btn-outline-danger w-100 mb-2">
+                                <i class="fas fa-times me-2"></i>Cancel Order
+                            </button>
+                        </form>
+                    }
+                    <a asp-action="Index" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Orders
+                    </a>
+                </div>
+            </div>
+
+            <!-- Need Help -->
+            <div class="card bg-light mt-4">
+                <div class="card-body text-center">
+                    <i class="fas fa-headset fa-2x text-primary mb-2"></i>
+                    <h6>Need Help?</h6>
+                    <p class="small text-muted mb-2">Contact our support team for any queries.</p>
+                    <a href="mailto:support@medicalstore.com" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-envelope me-1"></i>Contact Support
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .order-timeline {
+        padding: 20px 0;
+    }
+    .timeline-dot {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+    }
+    .timeline-line {
+        position: absolute;
+        top: 20px;
+        left: 12.5%;
+        right: 12.5%;
+        height: 3px;
+        background: #e9ecef;
+        z-index: -1;
+    }
+</style>
+
+@functions {
+    string GetStatusBadgeClass(OrderStatus status)
+    {
+        return status switch
+        {
+            OrderStatus.Delivered => "bg-success",
+            OrderStatus.Shipped => "bg-info",
+            OrderStatus.Processing => "bg-warning text-dark",
+            OrderStatus.Cancelled => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+
+    string GetStatusIcon(string status)
+    {
+        return status switch
+        {
+            nameof(OrderStatus.Pending) => "fa-clock",
+            nameof(OrderStatus.Processing) => "fa-cog",
+            nameof(OrderStatus.Shipped) => "fa-truck",
+            nameof(OrderStatus.Delivered) => "fa-check",
+            _ => "fa-circle"
+        };
+    }
+}

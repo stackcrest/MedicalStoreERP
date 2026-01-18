@@ -1,0 +1,369 @@
+@model ArticleViewModel
+@{
+    ViewData["Title"] = Model.Title;
+    var relatedArticles = ViewBag.RelatedArticles as List<ArticleViewModel> ?? new List<ArticleViewModel>();
+    var recentArticles = ViewBag.RecentArticles as List<ArticleViewModel> ?? new List<ArticleViewModel>();
+    var popularTags = ViewBag.PopularTags as List<string> ?? new List<string>();
+}
+
+<!-- Breadcrumb -->
+<div class="bg-light py-3">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Blog" asp-action="Index">Blog</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Blog" asp-action="Index" asp-route-category="@Model.Category">@Model.Category</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@Model.Title</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <article class="blog-article">
+                <!-- Article Header -->
+                <header class="mb-4">
+                    <div class="mb-3">
+                        <span class="badge bg-primary fs-6">@Model.Category</span>
+                        @if (Model.IsFeatured)
+                        {
+                            <span class="badge bg-warning text-dark fs-6 ms-2">
+                                <i class="fas fa-star"></i> Featured
+                            </span>
+                        }
+                    </div>
+                    <h1 class="display-5 fw-bold">@Model.Title</h1>
+                    <div class="d-flex flex-wrap align-items-center text-muted mb-3">
+                        <span class="me-4">
+                            <i class="fas fa-user me-1"></i>@Model.AuthorName
+                        </span>
+                        <span class="me-4">
+                            <i class="fas fa-calendar me-1"></i>
+                            @(Model.PublishedAt?.ToString("MMMM dd, yyyy") ?? Model.CreatedAt.ToString("MMMM dd, yyyy"))
+                        </span>
+                        <span class="me-4">
+                            <i class="fas fa-clock me-1"></i>@Model.ReadTime
+                        </span>
+                        <span class="me-4">
+                            <i class="fas fa-eye me-1"></i>@Model.ViewCount views
+                        </span>
+                        <span>
+                            <i class="fas fa-comments me-1"></i>@Model.CommentCount comments
+                        </span>
+                    </div>
+                </header>
+
+                <!-- Featured Image -->
+                @if (!string.IsNullOrEmpty(Model.FeaturedImageUrl))
+                {
+                    <figure class="mb-4">
+                        <img src="@Model.FeaturedImageUrl" class="img-fluid rounded shadow" alt="@Model.Title" style="width: 100%; max-height: 500px; object-fit: cover;">
+                    </figure>
+                }
+
+                <!-- Summary/Lead -->
+                <div class="lead mb-4 p-4 bg-light rounded">
+                    <i class="fas fa-quote-left text-primary me-2"></i>
+                    @Model.Summary
+                </div>
+
+                <!-- Video -->
+                @if (!string.IsNullOrEmpty(Model.VideoUrl))
+                {
+                    <div class="ratio ratio-16x9 mb-4">
+                        @if (Model.VideoUrl.Contains("youtube.com") || Model.VideoUrl.Contains("youtu.be"))
+                        {
+                            var videoId = Model.VideoUrl.Contains("youtu.be") 
+                                ? Model.VideoUrl.Split('/').Last() 
+                                : Model.VideoUrl.Split("v=").Last().Split('&').First();
+                            <iframe src="https://www.youtube.com/embed/@videoId" allowfullscreen class="rounded"></iframe>
+                        }
+                        else
+                        {
+                            <video controls class="rounded">
+                                <source src="@Model.VideoUrl" type="video/mp4">
+                            </video>
+                        }
+                    </div>
+                }
+
+                <!-- Article Content -->
+                <div class="article-content mb-4">
+                    @Html.Raw(Model.Content)
+                </div>
+
+                <!-- External Links/References -->
+                @if (Model.Links.Any())
+                {
+                    <div class="card mb-4 border-info">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="fas fa-link me-2"></i>References & Resources</h5>
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            @foreach (var link in Model.Links)
+                            {
+                                <li class="list-group-item d-flex align-items-center">
+                                    @if (link.Type == "video")
+                                    {
+                                        <i class="fas fa-video text-danger me-3"></i>
+                                    }
+                                    else if (link.Type == "pdf")
+                                    {
+                                        <i class="fas fa-file-pdf text-danger me-3"></i>
+                                    }
+                                    else if (link.Type == "image")
+                                    {
+                                        <i class="fas fa-image text-success me-3"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-external-link-alt text-primary me-3"></i>
+                                    }
+                                    <a href="@link.Url" target="_blank" rel="noopener noreferrer" class="text-decoration-none">
+                                        @link.Title
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                }
+
+                <!-- Tags -->
+                @if (Model.TagList.Any())
+                {
+                    <div class="mb-4">
+                        <strong class="me-2"><i class="fas fa-tags me-1"></i>Tags:</strong>
+                        @foreach (var tag in Model.TagList)
+                        {
+                            <a href="@Url.Action("Index", "Blog", new { tag = tag })" class="btn btn-outline-secondary btn-sm me-1 mb-1">
+                                @tag
+                            </a>
+                        }
+                    </div>
+                }
+
+                <!-- Share -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h6 class="mb-3"><i class="fas fa-share-alt me-2"></i>Share this article</h6>
+                        <div class="d-flex gap-2">
+                            <a href="https://www.facebook.com/sharer/sharer.php?u=@Context.Request.Path" target="_blank" class="btn btn-primary btn-sm">
+                                <i class="fab fa-facebook-f"></i> Facebook
+                            </a>
+                            <a href="https://twitter.com/intent/tweet?url=@Context.Request.Path&text=@Model.Title" target="_blank" class="btn btn-info btn-sm text-white">
+                                <i class="fab fa-twitter"></i> Twitter
+                            </a>
+                            <a href="https://wa.me/?text=@Model.Title - @Context.Request.Path" target="_blank" class="btn btn-success btn-sm">
+                                <i class="fab fa-whatsapp"></i> WhatsApp
+                            </a>
+                            <a href="https://www.linkedin.com/shareArticle?mini=true&url=@Context.Request.Path" target="_blank" class="btn btn-secondary btn-sm">
+                                <i class="fab fa-linkedin-in"></i> LinkedIn
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Comments Section -->
+                <section class="comments-section mt-5">
+                    <h4 class="mb-4"><i class="fas fa-comments me-2"></i>Comments (@Model.Comments.Count)</h4>
+
+                    <!-- Existing Comments -->
+                    @if (Model.Comments.Any())
+                    {
+                        <div class="comments-list mb-4">
+                            @foreach (var comment in Model.Comments)
+                            {
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-user-circle me-2 text-primary"></i>@comment.Name
+                                            </h6>
+                                            <small class="text-muted">@comment.CreatedAt.ToString("MMM dd, yyyy HH:mm")</small>
+                                        </div>
+                                        <p class="mb-0">@comment.Content</p>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>No comments yet. Be the first to share your thoughts!
+                        </div>
+                    }
+
+                    <!-- Add Comment Form -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Leave a Comment</h5>
+                        </div>
+                        <div class="card-body">
+                            <form asp-controller="Blog" asp-action="AddComment" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="ArticleId" value="@Model.Id" />
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Name <span class="text-danger">*</span></label>
+                                        <input type="text" name="Name" class="form-control" required 
+                                               value="@(User.Identity?.Name ?? "")" @(User.Identity?.IsAuthenticated == true ? "readonly" : "")>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" name="Email" class="form-control" placeholder="Optional">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Comment <span class="text-danger">*</span></label>
+                                    <textarea name="Content" class="form-control" rows="4" required placeholder="Share your thoughts..."></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane me-2"></i>Submit Comment
+                                </button>
+                                <small class="text-muted ms-3">Comments are moderated and will appear after approval.</small>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+            </article>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Author Info -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-circle fa-4x text-primary mb-3"></i>
+                    <h5>@Model.AuthorName</h5>
+                    <p class="text-muted small">Health & Wellness Expert</p>
+                </div>
+            </div>
+
+            <!-- Related Articles -->
+            @if (relatedArticles.Any())
+            {
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-newspaper me-2"></i>Related Articles</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            @foreach (var related in relatedArticles)
+                            {
+                                <li class="list-group-item">
+                                    <a href="@Url.Action("Read", "Blog", new { slug = related.Slug })" class="text-decoration-none d-flex align-items-center">
+                                        @if (!string.IsNullOrEmpty(related.FeaturedImageUrl))
+                                        {
+                                            <img src="@related.FeaturedImageUrl" class="rounded me-3" width="60" height="60" style="object-fit: cover;">
+                                        }
+                                        else
+                                        {
+                                            <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                                <i class="fas fa-newspaper text-muted"></i>
+                                            </div>
+                                        }
+                                        <div>
+                                            <h6 class="mb-1 text-dark">@related.Title</h6>
+                                            <small class="text-muted">@related.PublishedAt?.ToString("MMM dd")</small>
+                                        </div>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            }
+
+            <!-- Recent Articles -->
+            @if (recentArticles.Any())
+            {
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Recent Articles</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            @foreach (var recent in recentArticles)
+                            {
+                                <li class="list-group-item">
+                                    <a href="@Url.Action("Read", "Blog", new { slug = recent.Slug })" class="text-decoration-none">
+                                        <h6 class="mb-1 text-dark">@recent.Title</h6>
+                                        <small class="text-muted">@recent.PublishedAt?.ToString("MMM dd, yyyy")</small>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            }
+
+            <!-- Tags Cloud -->
+            @if (popularTags.Any())
+            {
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-tags me-2"></i>Popular Tags</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var tag in popularTags)
+                            {
+                                <a href="@Url.Action("Index", "Blog", new { tag = tag })" class="btn btn-outline-secondary btn-sm">
+                                    @tag
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Back to Blog -->
+            <a href="@Url.Action("Index", "Blog")" class="btn btn-outline-primary w-100">
+                <i class="fas fa-arrow-left me-2"></i>Back to Blog
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .article-content {
+        font-size: 1.1rem;
+        line-height: 1.8;
+    }
+    .article-content h2, .article-content h3, .article-content h4 {
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+    }
+    .article-content p {
+        margin-bottom: 1.5rem;
+    }
+    .article-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 1rem 0;
+    }
+    .article-content ul, .article-content ol {
+        margin-bottom: 1.5rem;
+        padding-left: 2rem;
+    }
+    .article-content li {
+        margin-bottom: 0.5rem;
+    }
+    .article-content blockquote {
+        border-left: 4px solid var(--primary-color);
+        padding-left: 1rem;
+        font-style: italic;
+        background: #f8f9fa;
+        padding: 1rem;
+        margin: 1.5rem 0;
+    }
+</style>

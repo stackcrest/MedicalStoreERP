@@ -1,0 +1,237 @@
+@{
+    ViewData["Title"] = "Reports";
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Reports & Analytics</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Reports</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Report Categories -->
+        <div class="row">
+            <!-- Sales Reports -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Sales Reports</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">View detailed sales analytics, revenue trends, and transaction history.</p>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>Daily/Monthly Sales Summary
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>Revenue Analysis
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>Top Selling Products
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>Export to PDF
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <a asp-action="Sales" class="btn btn-primary w-100">
+                            <i class="fas fa-arrow-right me-2"></i>View Sales Report
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory Reports -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-boxes me-2"></i>Inventory Reports</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Monitor stock levels, track inventory movement, and manage stock alerts.</p>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>Current Stock Levels
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>Category-wise Breakdown
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>Stock Valuation
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>Export to PDF
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <a asp-action="Inventory" class="btn btn-success w-100">
+                            <i class="fas fa-arrow-right me-2"></i>View Inventory Report
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Low Stock Alerts -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Low Stock Alerts</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Identify products running low on stock that need reordering.</p>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>Low Stock Items List
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>Reorder Recommendations
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>Supplier Information
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>Quick Reorder Actions
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <a asp-action="LowStock" class="btn btn-warning w-100">
+                            <i class="fas fa-arrow-right me-2"></i>View Low Stock Items
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expiry Reports -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0"><i class="fas fa-calendar-times me-2"></i>Expiry Reports</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Track medicines nearing expiry dates to prevent losses and ensure safety.</p>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>Near Expiry Items (30 days)
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>Expired Items List
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>Expiry Timeline View
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>Loss Prevention Analysis
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <a asp-action="ExpiryReport" class="btn btn-danger w-100">
+                            <i class="fas fa-arrow-right me-2"></i>View Expiry Report
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GST Reports -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>GST Reports</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Generate GST-compliant reports for tax filing and compliance.</p>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>CGST/SGST Breakdown
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>Tax Summary Report
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>Period-wise Tax Analysis
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>Export for Filing
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <a asp-action="GST" class="btn btn-info w-100">
+                            <i class="fas fa-arrow-right me-2"></i>View GST Report
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Quick access to common reporting tasks and exports.</p>
+                        <div class="d-grid gap-2">
+                            <a asp-action="Sales" asp-route-fromDate="@DateTime.Today.ToString("yyyy-MM-dd")" 
+                               asp-route-toDate="@DateTime.Today.ToString("yyyy-MM-dd")" class="btn btn-outline-primary">
+                                <i class="fas fa-calendar-day me-2"></i>Today's Sales
+                            </a>
+                            <a asp-action="Sales" asp-route-fromDate="@DateTime.Today.AddDays(-7).ToString("yyyy-MM-dd")" 
+                               asp-route-toDate="@DateTime.Today.ToString("yyyy-MM-dd")" class="btn btn-outline-primary">
+                                <i class="fas fa-calendar-week me-2"></i>This Week's Sales
+                            </a>
+                            <a asp-action="Sales" asp-route-fromDate="@(new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).ToString("yyyy-MM-dd"))" 
+                               asp-route-toDate="@DateTime.Today.ToString("yyyy-MM-dd")" class="btn btn-outline-primary">
+                                <i class="fas fa-calendar-alt me-2"></i>This Month's Sales
+                            </a>
+                            <a asp-action="ExpiryReport" asp-route-daysThreshold="7" class="btn btn-outline-danger">
+                                <i class="fas fa-exclamation-circle me-2"></i>Expiring in 7 Days
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Summary Cards -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Report Guidelines</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <h6 class="text-primary"><i class="fas fa-file-pdf me-2"></i>PDF Export</h6>
+                                <p class="small text-muted">All reports can be exported to PDF format for printing or sharing. Look for the "Download PDF" button on each report page.</p>
+                            </div>
+                            <div class="col-md-4">
+                                <h6 class="text-success"><i class="fas fa-filter me-2"></i>Filtering</h6>
+                                <p class="small text-muted">Use the date filters and search options to narrow down your reports to specific time periods or items.</p>
+                            </div>
+                            <div class="col-md-4">
+                                <h6 class="text-info"><i class="fas fa-sync me-2"></i>Real-time Data</h6>
+                                <p class="small text-muted">All reports show real-time data from your inventory and sales records. Refresh the page to get the latest information.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

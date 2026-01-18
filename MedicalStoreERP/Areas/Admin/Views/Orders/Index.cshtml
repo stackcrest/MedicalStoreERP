@@ -1,0 +1,185 @@
+@model PaginatedResult<OrderViewModel>
+@{
+    ViewData["Title"] = "Orders";
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Orders Management</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Orders</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Filter Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-filter me-2"></i>Filter Orders</h3>
+            </div>
+            <div class="card-body">
+                <form asp-action="Index" method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <input type="text" name="search" class="form-control" placeholder="Search order #, customer..." 
+                               value="@ViewBag.Search">
+                    </div>
+                    <div class="col-md-2">
+                        <select name="status" class="form-select" asp-items="@ViewBag.Statuses">
+                            <option value="">All Status</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="date" name="fromDate" class="form-control" value="@ViewBag.FromDate" placeholder="From Date">
+                    </div>
+                    <div class="col-md-2">
+                        <input type="date" name="toDate" class="form-control" value="@ViewBag.ToDate" placeholder="To Date">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-search me-1"></i>Search
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="fas fa-redo me-1"></i>Reset
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-shopping-cart me-2"></i>Orders (@Model.TotalCount)</h3>
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Customer</th>
+                            <th>Items</th>
+                            <th>Total</th>
+                            <th>Payment</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th width="180">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model.Items)
+                        {
+                            var statusClass = order.Status switch
+                            {
+                                OrderStatus.Pending => "status-pending",
+                                OrderStatus.Processing => "status-processing",
+                                OrderStatus.Shipped => "status-shipped",
+                                OrderStatus.Delivered => "status-delivered",
+                                OrderStatus.Cancelled => "status-cancelled",
+                                _ => "bg-secondary"
+                            };
+                            <tr>
+                                <td><strong>@order.OrderNumber</strong></td>
+                                <td>
+                                    @order.CustomerName
+                                    @if (order.RequiresPrescription)
+                                    {
+                                        @if (order.PrescriptionVerified)
+                                        {
+                                            <span class="badge bg-success ms-1" title="Prescription Verified">
+                                                <i class="fas fa-file-medical"></i> <i class="fas fa-check"></i>
+                                            </span>
+                                        }
+                                        else if (!string.IsNullOrEmpty(order.PrescriptionUrl))
+                                        {
+                                            <span class="badge bg-warning text-dark ms-1" title="Prescription Pending Review">
+                                                <i class="fas fa-file-medical"></i> <i class="fas fa-clock"></i>
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger ms-1" title="Prescription Required">
+                                                <i class="fas fa-file-medical"></i> <i class="fas fa-exclamation"></i>
+                                            </span>
+                                        }
+                                    }
+                                    <br><small class="text-muted">@order.CustomerEmail</small>
+                                </td>
+                                <td>@order.Items.Count items</td>
+                                <td><strong>₹@order.TotalAmount.ToString("N2")</strong></td>
+                                <td>
+                                    @if (order.PaymentMethod == PaymentMethod.COD)
+                                    {
+                                        <span class="badge bg-secondary">COD</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">Paid</span>
+                                    }
+                                </td>
+                                <td><span class="badge @statusClass">@order.Status</span></td>
+                                <td>@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="action-btns">
+                                    <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-info btn-sm" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    @if (order.Status == OrderStatus.Pending)
+                                    {
+                                        <form asp-action="ProcessOrder" asp-route-id="@order.Id" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-primary btn-sm" title="Process">
+                                                <i class="fas fa-cog"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                    @if (order.Status == OrderStatus.Processing)
+                                    {
+                                        <form asp-action="ShipOrder" asp-route-id="@order.Id" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-warning btn-sm" title="Ship">
+                                                <i class="fas fa-truck"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                    @if (order.Status == OrderStatus.Shipped)
+                                    {
+                                        <form asp-action="DeliverOrder" asp-route-id="@order.Id" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-success btn-sm" title="Mark Delivered">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                    <a asp-action="Invoice" asp-route-id="@order.Id" class="btn btn-secondary btn-sm" title="Invoice">
+                                        <i class="fas fa-file-invoice"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @if (Model.TotalPages > 1)
+            {
+                <div class="card-footer">
+                    <nav>
+                        <ul class="pagination justify-content-center mb-0">
+                            @for (int i = 1; i <= Model.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                    <a class="page-link" asp-action="Index" asp-route-page="@i"
+                                       asp-route-status="@ViewBag.Status" asp-route-search="@ViewBag.Search">@i</a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                </div>
+            }
+        </div>
+    </div>
+</section>

@@ -1,0 +1,110 @@
+@model RegisterViewModel
+@inject MedicalStoreERP.Services.IAppSettingsService AppSettings
+@{
+    ViewData["Title"] = "Register";
+    Layout = "_Layout";
+    var settings = AppSettings.GetCachedSettings();
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-user-plus fa-3x text-primary mb-3"></i>
+                        <h3 class="fw-bold">Create Account</h3>
+                        <p class="text-muted">Join us and get access to great deals</p>
+                    </div>
+
+                    <form asp-action="Register" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="FullName" class="form-label">Full Name *</label>
+                                <input asp-for="FullName" class="form-control" placeholder="John Doe">
+                                <span asp-validation-for="FullName" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="PhoneNumber" class="form-label">Phone Number *</label>
+                                <input asp-for="PhoneNumber" class="form-control" placeholder="@settings.ContactPhone">
+                                <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label">Email Address *</label>
+                            <input asp-for="Email" class="form-control" placeholder="your@email.com">
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Password" class="form-label">Password *</label>
+                                <input asp-for="Password" type="password" class="form-control" placeholder="••••••••">
+                                <span asp-validation-for="Password" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ConfirmPassword" class="form-label">Confirm Password *</label>
+                                <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="••••••••">
+                                <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Address" class="form-label">Address</label>
+                            <textarea asp-for="Address" class="form-control" rows="2" placeholder="Enter your address"></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="City" class="form-label">City</label>
+                                <input asp-for="City" class="form-control" placeholder="City">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="State" class="form-label">State</label>
+                                <select asp-for="State" class="form-select">
+                                    <option value="">Select State</option>
+                                    <option>Maharashtra</option>
+                                    <option>Karnataka</option>
+                                    <option>Tamil Nadu</option>
+                                    <option>Delhi</option>
+                                    <option>Gujarat</option>
+                                    <option>Rajasthan</option>
+                                    <option>Uttar Pradesh</option>
+                                    <option>West Bengal</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="PinCode" class="form-label">PIN Code</label>
+                                <input asp-for="PinCode" class="form-control" maxlength="6" placeholder="400001">
+                            </div>
+                        </div>
+
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="terms" required>
+                            <label class="form-check-label small" for="terms">
+                                I agree to the <a href="#" class="text-decoration-none">Terms of Service</a> 
+                                and <a href="#" class="text-decoration-none">Privacy Policy</a>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 btn-lg mb-3">
+                            <i class="fas fa-user-plus me-2"></i>Create Account
+                        </button>
+
+                        <div class="text-center">
+                            <span class="text-muted">Already have an account?</span>
+                            <a asp-action="Login" class="text-decoration-none fw-bold">Sign In</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

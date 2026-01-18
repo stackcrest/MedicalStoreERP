@@ -1,0 +1,83 @@
+@model OrderViewModel
+@inject MedicalStoreERP.Services.IAppSettingsService AppSettings
+@{
+    ViewData["Title"] = "Order Placed Successfully";
+    var settings = AppSettings.GetCachedSettings();
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 text-center">
+            <!-- Success Icon -->
+            <div class="mb-4">
+                <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center"
+                     style="width: 100px; height: 100px;">
+                    <i class="fas fa-check fa-3x"></i>
+                </div>
+            </div>
+
+            <!-- Success Message -->
+            <h2 class="text-success mb-3">Order Placed Successfully!</h2>
+            <p class="text-muted mb-4">
+                Thank you for your order. We've received your order and will begin processing it right away.
+            </p>
+
+            <!-- Order Details Card -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="mb-3">Order Details</h5>
+                    <table class="table table-borderless text-start mb-0">
+                        <tr>
+                            <td class="text-muted">Order Number:</td>
+                            <td class="text-end"><strong>@Model.OrderNumber</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Order Date:</td>
+                            <td class="text-end">@Model.OrderDate.ToString("dd MMM yyyy, hh:mm tt")</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Total Amount:</td>
+                            <td class="text-end"><strong class="text-primary">₹@Model.TotalAmount.ToString("N2")</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Payment Method:</td>
+                            <td class="text-end">@Model.PaymentMethod</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- What's Next -->
+            <div class="card bg-light mb-4">
+                <div class="card-body text-start">
+                    <h6><i class="fas fa-info-circle me-2 text-primary"></i>What happens next?</h6>
+                    <ol class="mb-0 ps-3">
+                        <li class="mb-2">You will receive an order confirmation email shortly</li>
+                        <li class="mb-2">Our team will process your order within 1-2 business days</li>
+                        <li class="mb-2">Once shipped, you'll receive tracking information</li>
+                        <li>Expected delivery: 3-5 business days</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-grid gap-2 d-md-flex justify-content-center">
+                <a asp-controller="Orders" asp-action="Details" asp-route-id="@Model.Id" class="btn btn-primary">
+                    <i class="fas fa-box me-2"></i>View Order Details
+                </a>
+                <a asp-controller="Shop" asp-action="Index" class="btn btn-outline-primary">
+                    <i class="fas fa-shopping-bag me-2"></i>Continue Shopping
+                </a>
+            </div>
+
+            <!-- Help Section -->
+            <div class="mt-5 pt-4 border-top">
+                <p class="text-muted small">
+                    Have questions about your order?<br>
+                    Contact us at <a href="mailto:@settings.ContactEmail">@settings.ContactEmail</a> 
+                    or call <a href="tel:@settings.ContactPhone.Replace("-", "").Replace(" ", "")">@settings.ContactPhone</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

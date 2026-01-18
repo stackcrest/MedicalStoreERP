@@ -1,0 +1,209 @@
+@model SupplierViewModel
+@{
+    ViewData["Title"] = "Supplier Details";
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Supplier Details</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Suppliers</a></li>
+                    <li class="breadcrumb-item active">Details</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Supplier Info Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-truck me-2"></i>
+                            @Model.Name
+                        </h3>
+                        <div class="card-tools">
+                            @if (Model.IsActive)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Inactive</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3">Contact Information</h6>
+                                <table class="table table-borderless table-sm">
+                                    <tr>
+                                        <td width="40%"><i class="fas fa-user text-muted me-2"></i>Contact Person</td>
+                                        <td><strong>@Model.ContactPerson</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="fas fa-phone text-muted me-2"></i>Phone</td>
+                                        <td><strong>@Model.Phone</strong></td>
+                                    </tr>
+                                    @if (!string.IsNullOrEmpty(Model.Email))
+                                    {
+                                        <tr>
+                                            <td><i class="fas fa-envelope text-muted me-2"></i>Email</td>
+                                            <td><strong>@Model.Email</strong></td>
+                                        </tr>
+                                    }
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3">Address Information</h6>
+                                <table class="table table-borderless table-sm">
+                                    @if (!string.IsNullOrEmpty(Model.Address))
+                                    {
+                                        <tr>
+                                            <td width="40%"><i class="fas fa-map-marker-alt text-muted me-2"></i>Address</td>
+                                            <td><strong>@Model.Address</strong></td>
+                                        </tr>
+                                    }
+                                    <tr>
+                                        <td><i class="fas fa-city text-muted me-2"></i>City</td>
+                                        <td><strong>@Model.City</strong></td>
+                                    </tr>
+                                    @if (!string.IsNullOrEmpty(Model.State))
+                                    {
+                                        <tr>
+                                            <td><i class="fas fa-map text-muted me-2"></i>State</td>
+                                            <td><strong>@Model.State</strong></td>
+                                        </tr>
+                                    }
+                                </table>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(Model.GSTIN))
+                        {
+                            <hr>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-muted mb-3">Tax Information</h6>
+                                    <p class="mb-0">
+                                        <i class="fas fa-file-invoice text-muted me-2"></i>
+                                        <strong>GSTIN:</strong> @Model.GSTIN
+                                    </p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Recent GRNs -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-file-alt me-2"></i>Recent GRNs</h3>
+                        <div class="card-tools">
+                            <a asp-controller="GRN" asp-action="Create" asp-route-supplierId="@Model.Id" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus me-1"></i>Create GRN
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        @if (Model.TotalGRNs > 0)
+                        {
+                            <div class="text-center py-4">
+                                <p class="mb-2">This supplier has <strong>@Model.TotalGRNs</strong> GRN(s)</p>
+                                <a asp-action="Ledger" asp-route-id="@Model.Id" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-book me-1"></i>View Ledger for Details
+                                </a>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-4 text-muted">
+                                <i class="fas fa-box-open fa-3x mb-3"></i>
+                                <p>No GRNs recorded for this supplier</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <!-- Balance Card -->
+                <div class="card @(Model.CurrentBalance > 0 ? "bg-danger" : Model.CurrentBalance < 0 ? "bg-success" : "bg-secondary") text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-white-50">Current Balance</h6>
+                                <h2 class="mb-0">₹@Math.Abs(Model.CurrentBalance).ToString("N2")</h2>
+                                @if (Model.CurrentBalance > 0)
+                                {
+                                    <small>Payable to supplier</small>
+                                }
+                                else if (Model.CurrentBalance < 0)
+                                {
+                                    <small>Receivable from supplier</small>
+                                }
+                                else
+                                {
+                                    <small>Settled</small>
+                                }
+                            </div>
+                            <div>
+                                <i class="fas fa-wallet fa-3x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-bolt me-2"></i>Quick Actions</h3>
+                    </div>
+                    <div class="card-body">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning w-100 mb-2">
+                            <i class="fas fa-edit me-2"></i>Edit Supplier
+                        </a>
+                        <a asp-action="Ledger" asp-route-id="@Model.Id" class="btn btn-info w-100 mb-2">
+                            <i class="fas fa-book me-2"></i>View Ledger
+                        </a>
+                        <a asp-controller="GRN" asp-action="Create" asp-route-supplierId="@Model.Id" class="btn btn-primary w-100 mb-2">
+                            <i class="fas fa-plus me-2"></i>Create GRN
+                        </a>
+                        <a asp-action="Index" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-arrow-left me-2"></i>Back to List
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Statistics -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-chart-bar me-2"></i>Statistics</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <h4 class="mb-0">@Model.TotalGRNs</h4>
+                                <small class="text-muted">Total GRNs</small>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="mb-0">₹@Model.TotalPurchases.ToString("N0")</h4>
+                                <small class="text-muted">Total Purchases</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

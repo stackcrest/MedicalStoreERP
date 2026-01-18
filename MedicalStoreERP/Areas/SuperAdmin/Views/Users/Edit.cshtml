@@ -1,0 +1,163 @@
+@model SuperAdminUserEditViewModel
+@{
+    ViewData["Title"] = "Edit User";
+}
+
+<!-- Content Header -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Edit User</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-action="Index" asp-controller="Dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Users</a></li>
+                    <li class="breadcrumb-item active">Edit</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card card-primary card-outline">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-user-edit me-2"></i>Edit User Details
+                        </h3>
+                    </div>
+                    <form asp-action="Edit" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        <div class="card-body">
+                            @if (!ViewData.ModelState.IsValid)
+                            {
+                                <div class="alert alert-danger">
+                                    <ul class="mb-0">
+                                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                        {
+                                            <li>@error.ErrorMessage</li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label asp-for="FullName" class="form-label">Full Name <span class="text-danger">*</span></label>
+                                        <input asp-for="FullName" class="form-control" />
+                                        <span asp-validation-for="FullName" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label asp-for="Email" class="form-label">Email</label>
+                                        <input asp-for="Email" class="form-control" readonly />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
+                                        <input asp-for="PhoneNumber" class="form-control" />
+                                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label asp-for="Role" class="form-label">Role <span class="text-danger">*</span></label>
+                                        <select asp-for="Role" class="form-select">
+                                            @foreach (var role in Model.AvailableRoles)
+                                            {
+                                                <option value="@role">@role</option>
+                                            }
+                                        </select>
+                                        <span asp-validation-for="Role" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Address" class="form-label">Address</label>
+                                <textarea asp-for="Address" class="form-control" rows="2"></textarea>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label asp-for="City" class="form-label">City</label>
+                                        <input asp-for="City" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label asp-for="State" class="form-label">State</label>
+                                        <input asp-for="State" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label asp-for="PinCode" class="form-label">PIN Code</label>
+                                        <input asp-for="PinCode" class="form-control" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="form-check">
+                                    <input asp-for="IsActive" class="form-check-input" />
+                                    <label asp-for="IsActive" class="form-check-label">User is Active</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary ms-2">
+                                <i class="fas fa-arrow-left me-2"></i>Back to List
+                            </a>
+                            <a asp-action="ResetPassword" asp-route-id="@Model.Id" class="btn btn-info ms-2">
+                                <i class="fas fa-key me-2"></i>Reset Password
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-info card-outline">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-info-circle me-2"></i>User Info
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <dl>
+                            <dt>Email:</dt>
+                            <dd>@Model.Email</dd>
+                            <dt>Current Role:</dt>
+                            <dd>
+                                @{
+                                    var roleClass = Model.Role switch
+                                    {
+                                        "SuperAdmin" => "role-superadmin",
+                                        "Admin" => "role-admin",
+                                        _ => "role-user"
+                                    };
+                                }
+                                <span class="badge @roleClass">@Model.Role</span>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

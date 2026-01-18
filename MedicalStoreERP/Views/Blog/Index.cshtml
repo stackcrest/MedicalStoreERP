@@ -1,0 +1,555 @@
+@model ArticleListViewModel
+@{
+    ViewData["Title"] = "Health Blog";
+}
+
+<!-- Hero Section -->
+<section class="bg-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-5 fw-bold mb-3">
+                    <i class="fas fa-heartbeat me-3"></i>Health & Wellness Blog
+                </h1>
+                <p class="lead mb-0">Stay informed with the latest health facts, prevention tips, cures, and wellness updates from our experts.</p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                <form asp-action="Index" method="get" class="d-flex">
+                    <input type="text" name="search" class="form-control me-2" placeholder="Search articles..." value="@Model.SearchTerm">
+                    <button type="submit" class="btn btn-light">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container py-5">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Category Pills -->
+            <div class="mb-4">
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="@Url.Action("Index", "Blog")" class="btn @(string.IsNullOrEmpty(Model.Category) ? "btn-primary" : "btn-outline-primary") btn-sm">
+                        All
+                    </a>
+                    @foreach (var cat in Model.Categories)
+                    {
+                        <a href="@Url.Action("Index", "Blog", new { category = cat })" 
+                           class="btn @(Model.Category == cat ? "btn-primary" : "btn-outline-primary") btn-sm">
+                            @cat
+                        </a>
+                    }
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.SearchTerm) || !string.IsNullOrEmpty(ViewBag.SelectedTag as string))
+            {
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Showing results for: <strong>@(ViewBag.SelectedTag ?? Model.SearchTerm)</strong>
+                    <a href="@Url.Action("Index")" class="float-end text-decoration-none">Clear</a>
+                </div>
+            }
+
+            @if (Model.Articles.Any())
+            {
+                <!-- Articles Grid -->
+                <div class="row">
+                    @foreach (var article in Model.Articles)
+                    {
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 shadow-sm border-0 article-card">
+                                @if (!string.IsNullOrEmpty(article.FeaturedImageUrl))
+                                {
+                                    <img src="@article.FeaturedImageUrl" class="card-img-top" alt="@article.Title" style="height: 200px; object-fit: cover;">
+                                }
+                                else
+                                {
+                                    <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                        <i class="fas fa-newspaper fa-4x text-muted"></i>
+                                    </div>
+                                }
+                                <div class="card-body d-flex flex-column">
+                                    <div class="mb-2">
+                                        <span class="badge bg-primary">@article.Category</span>
+                                        @if (article.IsFeatured)
+                                        {
+                                            <span class="badge bg-warning text-dark ms-1">
+                                                <i class="fas fa-star"></i> Featured
+                                            </span>
+                                        }
+                                    </div>
+                                    <h5 class="card-title">
+                                        <a href="@Url.Action("Read", "Blog", new { slug = article.Slug })" class="text-decoration-none text-dark stretched-link">
+                                            @article.Title
+                                        </a>
+                                    </h5>
+                                    <p class="card-text text-muted flex-grow-1">
+                                        @(article.Summary.Length > 120 ? article.Summary.Substring(0, 120) + "..." : article.Summary)
+                                    </p>
+                                    <div class="d-flex justify-content-between align-items-center text-muted small mt-auto">
+                                        <span>
+                                            <i class="fas fa-calendar me-1"></i>
+                                            @(article.PublishedAt?.ToString("MMM dd, yyyy") ?? article.CreatedAt.ToString("MMM dd, yyyy"))
+                                        </span>
+                                        <span>
+                                            <i class="fas fa-eye me-1"></i>@article.ViewCount
+                                            <i class="fas fa-comments ms-2 me-1"></i>@article.CommentCount
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Pagination -->
+                @if (Model.TotalPages > 1)
+                {
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Action("Index", new { page = Model.CurrentPage - 1, category = Model.Category, search = Model.SearchTerm })">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                            @for (int i = 1; i <= Model.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                    <a class="page-link" href="@Url.Action("Index", new { page = i, category = Model.Category, search = Model.SearchTerm })">@i</a>
+                                </li>
+                            }
+                            <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Action("Index", new { page = Model.CurrentPage + 1, category = Model.Category, search = Model.SearchTerm })">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                }
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-newspaper fa-5x text-muted mb-4"></i>
+                    <h3>No articles found</h3>
+                    <p class="text-muted">Check back later for health updates and articles.</p>
+                </div>
+            }
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Featured Articles -->
+            @if (Model.FeaturedArticles.Any())
+            {
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-warning">
+                        <h5 class="mb-0"><i class="fas fa-star me-2"></i>Featured Articles</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            @foreach (var featured in Model.FeaturedArticles)
+                            {
+                                <li class="list-group-item">
+                                    <a href="@Url.Action("Read", "Blog", new { slug = featured.Slug })" class="text-decoration-none text-dark d-flex align-items-center">
+                                        @if (!string.IsNullOrEmpty(featured.FeaturedImageUrl))
+                                        {
+                                            <img src="@featured.FeaturedImageUrl" class="rounded me-3" width="60" height="60" style="object-fit: cover;">
+                                        }
+                                        else
+                                        {
+                                            <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                                <i class="fas fa-newspaper text-muted"></i>
+                                            </div>
+                                        }
+                                        <div>
+                                            <h6 class="mb-1">@featured.Title</h6>
+                                            <small class="text-muted">@featured.ViewCount views</small>
+                                        </div>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            }
+
+            <!-- Categories -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-folder me-2"></i>Categories</h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        @foreach (var cat in Model.Categories)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <a href="@Url.Action("Index", new { category = cat })" class="text-decoration-none">@cat</a>
+                                <span class="badge bg-secondary rounded-pill">
+                                    @Model.Articles.Count(a => a.Category == cat)
+                                </span>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Popular Tags -->
+            @if (Model.PopularTags.Any())
+            {
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-tags me-2"></i>Popular Tags</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var tag in Model.PopularTags)
+                            {
+                                <a href="@Url.Action("Index", new { tag = tag })" class="btn btn-outline-secondary btn-sm">
+                                    @tag
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Health Tips -->
+            <div class="card shadow-sm bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-lightbulb fa-3x mb-3"></i>
+                    <h5>Daily Health Tip</h5>
+                    <p class="mb-0">Stay hydrated! Drinking 8 glasses of water daily helps maintain body functions and keeps you energized.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .article-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .article-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+    
+    /* Shopping Popup Pamphlet Styles */
+    .shop-popup-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 9998;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .shop-popup-overlay.show {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    .shop-popup {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.8);
+        width: 90%;
+        max-width: 500px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 0;
+        z-index: 9999;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+    }
+    
+    .shop-popup.show {
+        opacity: 1;
+        visibility: visible;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    
+    .shop-popup-close {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        width: 36px;
+        height: 36px;
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 50%;
+        color: white;
+        font-size: 1.2rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        z-index: 10;
+    }
+    
+    .shop-popup-close:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: rotate(90deg);
+    }
+    
+    .shop-popup-content {
+        padding: 2.5rem;
+        text-align: center;
+        color: white;
+    }
+    
+    .shop-popup-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        animation: pulse-icon 2s infinite;
+    }
+    
+    .shop-popup-icon i {
+        font-size: 2.5rem;
+    }
+    
+    .shop-popup h3 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+    }
+    
+    .shop-popup p {
+        font-size: 1rem;
+        opacity: 0.9;
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+    
+    .shop-popup-features {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .shop-popup-feature {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        background: rgba(255, 255, 255, 0.15);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+    }
+    
+    .shop-popup-feature i {
+        color: #fbbf24;
+    }
+    
+    .shop-popup-cta {
+        display: inline-block;
+        background: white;
+        color: #764ba2;
+        padding: 1rem 2.5rem;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .shop-popup-cta:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        color: #667eea;
+    }
+    
+    .shop-popup-cta i {
+        margin-right: 0.5rem;
+    }
+    
+    .shop-popup-dismiss {
+        display: block;
+        margin-top: 1rem;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.85rem;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    
+    .shop-popup-dismiss:hover {
+        color: white;
+    }
+    
+    .shop-popup-ribbon {
+        position: absolute;
+        top: 20px;
+        left: -35px;
+        background: #fbbf24;
+        color: #1f2937;
+        padding: 0.35rem 2.5rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        transform: rotate(-45deg);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    @@keyframes pulse-icon {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.1);
+        }
+    }
+    
+    /* Mobile responsive */
+    @@media (max-width: 575.98px) {
+        .shop-popup {
+            width: 95%;
+            max-width: none;
+        }
+        
+        .shop-popup-content {
+            padding: 2rem 1.5rem;
+        }
+        
+        .shop-popup h3 {
+            font-size: 1.5rem;
+        }
+        
+        .shop-popup-icon {
+            width: 60px;
+            height: 60px;
+        }
+        
+        .shop-popup-icon i {
+            font-size: 1.75rem;
+        }
+        
+        .shop-popup-features {
+            gap: 0.75rem;
+        }
+        
+        .shop-popup-feature {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.75rem;
+        }
+        
+        .shop-popup-cta {
+            padding: 0.875rem 2rem;
+            font-size: 1rem;
+        }
+    }
+</style>
+
+<!-- Shopping Popup Pamphlet -->
+<div class="shop-popup-overlay" id="shopPopupOverlay"></div>
+<div class="shop-popup" id="shopPopup">
+    <div class="shop-popup-ribbon">Special Offer</div>
+    <button class="shop-popup-close" onclick="closeShopPopup()">
+        <i class="fas fa-times"></i>
+    </button>
+    <div class="shop-popup-content">
+        <div class="shop-popup-icon">
+            <i class="fas fa-pills"></i>
+        </div>
+        <h3>🎉 Exclusive Health Deals!</h3>
+        <p>Get <strong>5% OFF</strong> on all medicines when you shop for ₹500 or more. Quality healthcare products delivered to your doorstep!</p>
+        <div class="shop-popup-features">
+            <div class="shop-popup-feature">
+                <i class="fas fa-truck"></i>
+                <span>Free Delivery</span>
+            </div>
+            <div class="shop-popup-feature">
+                <i class="fas fa-shield-alt"></i>
+                <span>100% Genuine</span>
+            </div>
+            <div class="shop-popup-feature">
+                <i class="fas fa-clock"></i>
+                <span>Fast Shipping</span>
+            </div>
+        </div>
+        <a href="@Url.Action("Index", "Shop")" class="shop-popup-cta">
+            <i class="fas fa-shopping-cart"></i>Shop Now
+        </a>
+        <a class="shop-popup-dismiss" onclick="closeShopPopup()">Maybe later</a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function() {
+            var popupShown = false;
+            var scrollThreshold = 300; // Show popup after scrolling 300px
+            var popupDelay = 10000; // Or after 10 seconds
+            var sessionKey = 'shopPopupShown';
+            
+            // Check if popup was already shown in this session
+            if (sessionStorage.getItem(sessionKey)) {
+                return; // Don't show popup again in this session
+            }
+            
+            function showShopPopup() {
+                if (popupShown) return;
+                popupShown = true;
+                
+                document.getElementById('shopPopupOverlay').classList.add('show');
+                document.getElementById('shopPopup').classList.add('show');
+                document.body.style.overflow = 'hidden';
+                
+                // Mark as shown in session
+                sessionStorage.setItem(sessionKey, 'true');
+            }
+            
+            // Show popup on scroll
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > scrollThreshold) {
+                    showShopPopup();
+                }
+            });
+            
+            // Also show popup after delay if not scrolled
+            setTimeout(function() {
+                showShopPopup();
+            }, popupDelay);
+            
+            // Close on overlay click
+            document.getElementById('shopPopupOverlay').addEventListener('click', function() {
+                closeShopPopup();
+            });
+            
+            // Close on escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeShopPopup();
+                }
+            });
+        })();
+        
+        function closeShopPopup() {
+            document.getElementById('shopPopupOverlay').classList.remove('show');
+            document.getElementById('shopPopup').classList.remove('show');
+            document.body.style.overflow = '';
+        }
+    </script>
+}

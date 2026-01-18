@@ -1,0 +1,309 @@
+@model MedicalStoreERP.Models.ContactMessage
+@inject MedicalStoreERP.Services.IAppSettingsService AppSettings
+@{
+    ViewData["Title"] = "Contact Us";
+    var settings = AppSettings.GetCachedSettings();
+}
+
+<!-- Hero Section -->
+<section class="bg-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8 mx-auto text-center">
+                <h1 class="display-4 fw-bold mb-3">Contact Us</h1>
+                <p class="lead mb-0">We're here to help. Get in touch with us today!</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Breadcrumb -->
+<div class="container py-3">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+            <li class="breadcrumb-item active">Contact Us</li>
+        </ol>
+    </nav>
+</div>
+
+<!-- Contact Content -->
+<section class="py-5">
+    <div class="container">
+        <div class="row g-5">
+            <!-- Contact Information -->
+            <div class="col-lg-5">
+                <h3 class="fw-bold mb-4">Get In Touch</h3>
+                <p class="text-muted mb-4">
+                    Have questions about our products or services? We'd love to hear from you. 
+                    Send us a message and we'll respond as soon as possible.
+                </p>
+
+                <div class="d-flex mb-4">
+                    <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3"
+                         style="width: 50px; height: 50px; min-width: 50px;">
+                        <i class="fas fa-map-marker-alt text-primary"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">Our Location</h6>
+                        <p class="text-muted mb-0">
+                            @settings.FullAddress
+                        </p>
+                    </div>
+                </div>
+
+                <div class="d-flex mb-4">
+                    <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3"
+                         style="width: 50px; height: 50px; min-width: 50px;">
+                        <i class="fas fa-phone-alt text-success"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">Phone Number</h6>
+                        <p class="text-muted mb-0">
+                            <a href="tel:@settings.ContactPhone.Replace(" ", "")" class="text-decoration-none text-muted">@settings.ContactPhone</a>
+                            @if (!string.IsNullOrEmpty(settings.ContactPhone2))
+                            {
+                                <br>
+                                <a href="tel:@settings.ContactPhone2.Replace(" ", "")" class="text-decoration-none text-muted">@settings.ContactPhone2</a>
+                            }
+                        </p>
+                    </div>
+                </div>
+
+                <div class="d-flex mb-4">
+                    <div class="bg-info bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3"
+                         style="width: 50px; height: 50px; min-width: 50px;">
+                        <i class="fas fa-envelope text-info"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">Email Address</h6>
+                        <p class="text-muted mb-0">
+                            <a href="mailto:@settings.ContactEmail" class="text-decoration-none text-muted">@settings.ContactEmail</a>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="d-flex mb-4">
+                    <div class="bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3"
+                         style="width: 50px; height: 50px; min-width: 50px;">
+                        <i class="fas fa-clock text-warning"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">Working Hours</h6>
+                        <p class="text-muted mb-0">
+                            @settings.BusinessHours
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Social Links -->
+                <h6 class="fw-bold mb-3">Follow Us</h6>
+                <div class="d-flex gap-2">
+                    @if (!string.IsNullOrEmpty(settings.FacebookUrl))
+                    {
+                        <a href="@settings.FacebookUrl" target="_blank" class="btn btn-outline-primary btn-sm rounded-circle" style="width: 40px; height: 40px;">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                    }
+                    @if (!string.IsNullOrEmpty(settings.TwitterUrl))
+                    {
+                        <a href="@settings.TwitterUrl" target="_blank" class="btn btn-outline-primary btn-sm rounded-circle" style="width: 40px; height: 40px;">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                    }
+                    @if (!string.IsNullOrEmpty(settings.InstagramUrl))
+                    {
+                        <a href="@settings.InstagramUrl" target="_blank" class="btn btn-outline-primary btn-sm rounded-circle" style="width: 40px; height: 40px;">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                    }
+                    @if (!string.IsNullOrEmpty(settings.LinkedInUrl))
+                    {
+                        <a href="@settings.LinkedInUrl" target="_blank" class="btn btn-outline-primary btn-sm rounded-circle" style="width: 40px; height: 40px;">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                    }
+                    @if (!string.IsNullOrEmpty(settings.YouTubeUrl))
+                    {
+                        <a href="@settings.YouTubeUrl" target="_blank" class="btn btn-outline-primary btn-sm rounded-circle" style="width: 40px; height: 40px;">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                    }
+                    @if (settings.WhatsAppEnabled && !string.IsNullOrEmpty(settings.WhatsAppNumber))
+                    {
+                        <a href="https://wa.me/@settings.WhatsAppNumber" target="_blank" class="btn btn-outline-success btn-sm rounded-circle" style="width: 40px; height: 40px;">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <!-- Contact Form -->
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4 p-lg-5">
+                        <h4 class="fw-bold mb-4">Send Us a Message</h4>
+                        
+                        <form asp-action="Contact" method="post">
+                            <input type="hidden" asp-for="UserId" />
+                            @Html.AntiForgeryToken()
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label asp-for="Name" class="form-label">Full Name <span class="text-danger">*</span></label>
+                                    <input asp-for="Name" class="form-control" placeholder="Enter your name" />
+                                    <span asp-validation-for="Name" class="text-danger small"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="Email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                                    <input asp-for="Email" class="form-control" placeholder="Enter your email" />
+                                    <span asp-validation-for="Email" class="text-danger small"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="Phone" class="form-label">Phone Number</label>
+                                    <input asp-for="Phone" class="form-control" placeholder="Enter your phone number" />
+                                    <span asp-validation-for="Phone" class="text-danger small"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="Category" class="form-label">Category <span class="text-danger">*</span></label>
+                                    <select asp-for="Category" class="form-select" asp-items="Html.GetEnumSelectList<MedicalStoreERP.Models.ContactCategory>()">
+                                    </select>
+                                    <span asp-validation-for="Category" class="text-danger small"></span>
+                                </div>
+                                <div class="col-12">
+                                    <label asp-for="Subject" class="form-label">Subject <span class="text-danger">*</span></label>
+                                    <input asp-for="Subject" class="form-control" placeholder="Enter subject" />
+                                    <span asp-validation-for="Subject" class="text-danger small"></span>
+                                </div>
+                                <div class="col-12">
+                                    <label asp-for="Message" class="form-label">Message <span class="text-danger">*</span></label>
+                                    <textarea asp-for="Message" class="form-control" rows="5" 
+                                              placeholder="Write your message here..."></textarea>
+                                    <span asp-validation-for="Message" class="text-danger small"></span>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary btn-lg">
+                                        <i class="fas fa-paper-plane me-2"></i>Send Message
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Map Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-4">
+            <h3 class="fw-bold">Find Us On Map</h3>
+            <p class="text-muted">Visit our store for personalized assistance</p>
+        </div>
+        <div class="card border-0 shadow-sm overflow-hidden">
+            <div id="storeMap" style="height: 400px;"></div>
+        </div>
+    </div>
+</section>
+
+<!-- Leaflet Map Script -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var storeLat = @settings.StoreLatitude;
+        var storeLng = @settings.StoreLongitude;
+        var zoomLevel = @settings.MapZoomLevel;
+        var appName = '@settings.AppName';
+        var address = '@settings.FullAddress.Replace("'", "\\'")';
+        
+        var map = L.map('storeMap').setView([storeLat, storeLng], zoomLevel);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        L.marker([storeLat, storeLng])
+            .addTo(map)
+            .bindPopup('<strong>' + appName + '</strong><br>' + address)
+            .openPopup();
+    });
+</script>
+
+<!-- FAQ Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h3 class="fw-bold">Frequently Asked Questions</h3>
+            <p class="text-muted">Quick answers to common questions</p>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#faq1">
+                                How do I place an order?
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Simply browse our products, add items to your cart, and proceed to checkout. 
+                                You can pay using various payment methods including COD, UPI, and Card payments.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#faq2">
+                                Do you require a prescription?
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Yes, certain medications require a valid prescription. You can upload your prescription 
+                                during checkout, and our pharmacist will verify it before processing your order.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#faq3">
+                                What is your delivery time?
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                We typically deliver within 2-5 business days depending on your location. 
+                                Express delivery options are also available for urgent requirements.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#faq4">
+                                Can I return or exchange products?
+                            </button>
+                        </h2>
+                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Due to the nature of pharmaceutical products, we have a strict return policy. 
+                                Returns are only accepted for damaged or incorrect items. Please contact us 
+                                within 48 hours of delivery for any issues.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,229 @@
+@model MedicineCreateViewModel
+@{
+    ViewData["Title"] = "Add Medicine";
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Add New Medicine</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Medicines</a></li>
+                    <li class="breadcrumb-item active">Add</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <form asp-action="Create" method="post">
+            <div class="row">
+                <div class="col-lg-8">
+                    <!-- Basic Info -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-info-circle me-2"></i>Basic Information</h3>
+                        </div>
+                        <div class="card-body">
+                            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="Name" class="form-label">Medicine Name *</label>
+                                    <input asp-for="Name" class="form-control" placeholder="Enter medicine name">
+                                    <span asp-validation-for="Name" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="GenericName" class="form-label">Generic Name *</label>
+                                    <input asp-for="GenericName" class="form-control" placeholder="Enter generic name">
+                                    <span asp-validation-for="GenericName" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="CategoryId" class="form-label">Category *</label>
+                                    <select asp-for="CategoryId" class="form-select" asp-items="@ViewBag.Categories">
+                                        <option value="">Select Category</option>
+                                    </select>
+                                    <span asp-validation-for="CategoryId" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="Manufacturer" class="form-label">Manufacturer *</label>
+                                    <input asp-for="Manufacturer" class="form-control" placeholder="Enter manufacturer">
+                                    <span asp-validation-for="Manufacturer" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Description" class="form-label">Description</label>
+                                <textarea asp-for="Description" class="form-control" rows="3" 
+                                          placeholder="Enter description"></textarea>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label asp-for="Composition" class="form-label">Composition</label>
+                                    <input asp-for="Composition" class="form-control" placeholder="e.g., Paracetamol 500mg">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label asp-for="Dosage" class="form-label">Dosage</label>
+                                    <input asp-for="Dosage" class="form-control" placeholder="e.g., 1 tablet 3 times daily">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label asp-for="PackSize" class="form-label">Pack Size</label>
+                                    <input asp-for="PackSize" class="form-control" placeholder="e.g., 10 tablets">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stock & Pricing -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-rupee-sign me-2"></i>Stock & Pricing</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="BatchNo" class="form-label">Batch Number *</label>
+                                    <input asp-for="BatchNo" class="form-control" placeholder="Enter batch number">
+                                    <span asp-validation-for="BatchNo" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="HSNCode" class="form-label">HSN Code</label>
+                                    <input asp-for="HSNCode" class="form-control" placeholder="e.g., 3004">
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label asp-for="PurchasePrice" class="form-label">Purchase Price (₹) *</label>
+                                    <input asp-for="PurchasePrice" type="number" step="0.01" class="form-control">
+                                    <span asp-validation-for="PurchasePrice" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label asp-for="MRP" class="form-label">MRP (₹) *</label>
+                                    <input asp-for="MRP" type="number" step="0.01" class="form-control">
+                                    <span asp-validation-for="MRP" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label asp-for="SalePrice" class="form-label">Sale Price (₹) *</label>
+                                    <input asp-for="SalePrice" type="number" step="0.01" class="form-control">
+                                    <span asp-validation-for="SalePrice" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label asp-for="StockQty" class="form-label">Stock Quantity *</label>
+                                    <input asp-for="StockQty" type="number" class="form-control">
+                                    <span asp-validation-for="StockQty" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label asp-for="ReorderLevel" class="form-label">Reorder Level *</label>
+                                    <input asp-for="ReorderLevel" type="number" class="form-control">
+                                    <span asp-validation-for="ReorderLevel" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label asp-for="GSTPercent" class="form-label">GST (%) *</label>
+                                    <input asp-for="GSTPercent" type="number" step="0.01" class="form-control">
+                                    <span asp-validation-for="GSTPercent" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="ManufactureDate" class="form-label">Manufacture Date</label>
+                                    <input asp-for="ManufactureDate" type="date" class="form-control">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="ExpiryDate" class="form-label">Expiry Date *</label>
+                                    <input asp-for="ExpiryDate" type="date" class="form-control">
+                                    <span asp-validation-for="ExpiryDate" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <!-- Image & Status -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-image me-2"></i>Image</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label asp-for="ImageUrl" class="form-label">Image URL</label>
+                                <input asp-for="ImageUrl" class="form-control" placeholder="https://...">
+                                <small class="text-muted">Enter the URL of the medicine image</small>
+                            </div>
+                            <div class="text-center">
+                                <img id="imagePreview" src="https://via.placeholder.com/200x200?text=No+Image" 
+                                     class="img-fluid rounded" style="max-height: 200px;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-toggle-on me-2"></i>Status</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check mb-3">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox">
+                                <label asp-for="IsActive" class="form-check-label">Active</label>
+                                <br><small class="text-muted">Active medicines will be visible in the store</small>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input asp-for="RequiresPrescription" class="form-check-input" type="checkbox">
+                                <label asp-for="RequiresPrescription" class="form-check-label">Requires Prescription</label>
+                                <br><small class="text-muted">Prescription medicines require doctor's note</small>
+                            </div>
+                            <div class="form-check">
+                                <input asp-for="IsFeatured" class="form-check-input" type="checkbox">
+                                <label asp-for="IsFeatured" class="form-check-label">Featured</label>
+                                <br><small class="text-muted">Featured medicines appear on homepage</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="card">
+                        <div class="card-body">
+                            <button type="submit" class="btn btn-primary btn-block mb-2">
+                                <i class="fas fa-save me-2"></i>Save Medicine
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-block">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Image preview
+        $('#ImageUrl').on('input', function() {
+            var url = $(this).val();
+            if (url) {
+                $('#imagePreview').attr('src', url);
+            } else {
+                $('#imagePreview').attr('src', 'https://via.placeholder.com/200x200?text=No+Image');
+            }
+        });
+    </script>
+}

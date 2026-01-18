@@ -1,0 +1,256 @@
+@model StockReportViewModel
+@{
+    ViewData["Title"] = "Inventory Report";
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Inventory Report</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Inventory Report</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Filter Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-filter me-2"></i>Filter Options</h3>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label">Category</label>
+                        <select name="categoryId" class="form-select" asp-items="@ViewBag.Categories">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Stock Status</label>
+                        <select name="stockStatus" class="form-select">
+                            <option value="">All</option>
+                            <option value="low" selected="@(ViewBag.StockStatus == "low")">Low Stock</option>
+                            <option value="outofstock" selected="@(ViewBag.StockStatus == "outofstock")">Out of Stock</option>
+                            <option value="instock" selected="@(ViewBag.StockStatus == "instock")">In Stock</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Supplier</label>
+                        <select name="supplierId" class="form-select" asp-items="@ViewBag.Suppliers">
+                            <option value="">All Suppliers</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Generate
+                        </button>
+                        <a asp-action="ExportInventory" class="btn btn-success">
+                            <i class="fas fa-file-excel me-2"></i>Export
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="row">
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>@Model.TotalItems</h3>
+                        <p>Total Products</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-boxes"></i></div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3>₹@Model.TotalStockValue.ToString("N0")</h3>
+                        <p>Total Stock Value</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-rupee-sign"></i></div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3>@Model.Items.Count(i => i.StockQty <= i.ReorderLevel && i.StockQty > 0)</h3>
+                        <p>Low Stock Items</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-danger">
+                    <div class="inner">
+                        <h3>@Model.Items.Count(i => i.StockQty == 0)</h3>
+                        <p>Out of Stock</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-times-circle"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Stock by Category -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-chart-pie me-2"></i>Stock Value by Category</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="categoryChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stock Status -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-chart-bar me-2"></i>Stock Status Overview</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="statusChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Table -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-list me-2"></i>Inventory Details</h3>
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-striped" id="inventoryTable">
+                    <thead>
+                        <tr>
+                            <th>Medicine</th>
+                            <th>Category</th>
+                            <th>Batch #</th>
+                            <th class="text-center">Stock</th>
+                            <th>Reorder Level</th>
+                            <th class="text-end">Cost Price</th>
+                            <th class="text-end">Sell Price</th>
+                            <th class="text-end">Stock Value</th>
+                            <th>Expiry</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Items?.Any() == true)
+                        {
+                            @foreach (var item in Model.Items)
+                            {
+                                var isLowStock = item.StockQty <= item.ReorderLevel && item.StockQty > 0;
+                                var isOutOfStock = item.StockQty == 0;
+                                var isExpiringSoon = item.ExpiryDate <= DateTime.Today.AddMonths(3);
+                                var isExpired = item.ExpiryDate <= DateTime.Today;
+                                
+                                <tr class="@(isOutOfStock ? "table-danger" : isLowStock ? "table-warning" : "")">
+                                    <td>
+                                        <strong>@item.MedicineName</strong>
+                                    </td>
+                                    <td>@item.CategoryName</td>
+                                    <td><code>@item.BatchNo</code></td>
+                                    <td class="text-center">
+                                        <strong class="@(isOutOfStock ? "text-danger" : isLowStock ? "text-warning" : "text-success")">
+                                            @item.StockQty
+                                        </strong>
+                                    </td>
+                                    <td>@item.ReorderLevel</td>
+                                    <td class="text-end">₹@item.PurchasePrice.ToString("N2")</td>
+                                    <td class="text-end">₹@item.SalePrice.ToString("N2")</td>
+                                    <td class="text-end"><strong>₹@item.StockValue.ToString("N2")</strong></td>
+                                    <td>
+                                        <span class="badge @(isExpired ? "bg-danger" : isExpiringSoon ? "bg-warning text-dark" : "bg-success")">
+                                            @item.ExpiryDate.ToString("MMM yyyy")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (isOutOfStock)
+                                        {
+                                            <span class="badge bg-danger">Out of Stock</span>
+                                        }
+                                        else if (isLowStock)
+                                        {
+                                            <span class="badge bg-warning text-dark">Low Stock</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">In Stock</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Category Chart
+        var categoryData = @Html.Raw(Json.Serialize(Model.Items.GroupBy(i => i.CategoryName).Select(g => new { Name = g.Key, Value = g.Sum(i => i.StockValue) })));
+        var catCtx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(catCtx, {
+            type: 'doughnut',
+            data: {
+                labels: categoryData.map(c => c.name),
+                datasets: [{
+                    data: categoryData.map(c => c.value),
+                    backgroundColor: ['#007bff', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6f42c1', '#fd7e14', '#20c997']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'right' } }
+            }
+        });
+
+        // Status Chart
+        var lowStockCount = @Model.Items.Count(i => i.StockQty <= i.ReorderLevel && i.StockQty > 0);
+        var outOfStockCount = @Model.Items.Count(i => i.StockQty == 0);
+        var inStockCount = @Model.TotalItems - lowStockCount - outOfStockCount;
+        var statusCtx = document.getElementById('statusChart').getContext('2d');
+        new Chart(statusCtx, {
+            type: 'bar',
+            data: {
+                labels: ['In Stock', 'Low Stock', 'Out of Stock'],
+                datasets: [{
+                    label: 'Products',
+                    data: [inStockCount, lowStockCount, outOfStockCount],
+                    backgroundColor: ['#28a745', '#ffc107', '#dc3545']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+
+        // Initialize DataTable
+        $(document).ready(function() {
+            $('#inventoryTable').DataTable({
+                order: [[3, 'asc']],
+                pageLength: 50
+            });
+        });
+    </script>
+}

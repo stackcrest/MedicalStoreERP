@@ -1,0 +1,345 @@
+@model MedicalStoreERP.Models.ViewModels.MedicineDetailViewModel
+@{
+    ViewData["Title"] = Model.Medicine.Name;
+    var medicine = Model.Medicine;
+}
+
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Shop" asp-action="Index">Shop</a></li>
+            @if (!string.IsNullOrEmpty(medicine.CategoryName))
+            {
+                <li class="breadcrumb-item">
+                    <a asp-controller="Shop" asp-action="Index" asp-route-categoryId="@medicine.CategoryId">@medicine.CategoryName</a>
+                </li>
+            }
+            <li class="breadcrumb-item active">@medicine.Name</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Product Image -->
+        <div class="col-lg-5 mb-4">
+            <div class="card">
+                <div class="card-body text-center p-4">
+                    @if (!string.IsNullOrEmpty(medicine.ImageUrl))
+                    {
+                        <img src="@medicine.ImageUrl" alt="@medicine.Name" class="img-fluid rounded" style="max-height: 400px;">
+                    }
+                    else
+                    {
+                        <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 400px;">
+                            <i class="fas fa-pills fa-5x text-muted"></i>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Details -->
+        <div class="col-lg-7">
+            <div class="card">
+                <div class="card-body">
+                    <!-- Category & Stock Badge -->
+                    <div class="mb-2">
+                        @if (!string.IsNullOrEmpty(medicine.CategoryName))
+                        {
+                            <span class="badge bg-primary me-2">@medicine.CategoryName</span>
+                        }
+                        @if (medicine.StockQty > 0)
+                        {
+                            <span class="badge bg-success">In Stock (@medicine.StockQty available)</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">Out of Stock</span>
+                        }
+                        @if (medicine.RequiresPrescription)
+                        {
+                            <span class="badge bg-warning text-dark ms-2">
+                                <i class="fas fa-prescription me-1"></i>Prescription Required
+                            </span>
+                        }
+                    </div>
+
+                    <!-- Product Title -->
+                    <h1 class="h2 mb-1">@medicine.Name</h1>
+                    <p class="text-muted mb-3">@medicine.GenericName</p>
+
+                    <!-- Price -->
+                    <div class="mb-4">
+                        <span class="h3 text-primary">₹@medicine.SalePrice.ToString("N2")</span>
+                        <small class="text-muted ms-2">(Incl. of all taxes)</small>
+                        @{
+                            var gstAmount = medicine.SalePrice * medicine.GSTPercent / (100 + medicine.GSTPercent);
+                        }
+                        <br>
+                        <small class="text-muted">GST @medicine.GSTPercent%: ₹@gstAmount.ToString("N2")</small>
+                    </div>
+
+                    <!-- Short Info -->
+                    <div class="row mb-4">
+                        <div class="col-6 col-md-3 mb-3">
+                            <small class="text-muted d-block">Manufacturer</small>
+                            <strong>@medicine.Manufacturer</strong>
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <small class="text-muted d-block">Batch No</small>
+                            <strong>@medicine.BatchNo</strong>
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <small class="text-muted d-block">Expiry</small>
+                            <strong class="@(medicine.ExpiryDate <= DateTime.Today.AddMonths(3) ? "text-warning" : "")">
+                                @medicine.ExpiryDate.ToString("MMM yyyy")
+                            </strong>
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <small class="text-muted d-block">Unit</small>
+                            <strong>@medicine.PackSize</strong>
+                        </div>
+                    </div>
+
+                    <!-- Add to Cart Form -->
+                    @if (medicine.StockQty > 0 && medicine.IsActive)
+                    {
+                        @if (!User.IsInRole("Admin") && !User.IsInRole("SuperAdmin"))
+                        {
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <div class="input-group" style="width: 140px;">
+                                <button type="button" class="btn btn-outline-secondary" onclick="decrementQty()">-</button>
+                                <input type="number" id="quantity" class="form-control text-center" value="1" min="1" max="@medicine.StockQty">
+                                <button type="button" class="btn btn-outline-secondary" onclick="incrementQty()">+</button>
+                            </div>
+                            <button type="button" class="btn btn-primary btn-lg" onclick="addToCart(@medicine.Id)">
+                                <i class="fas fa-cart-plus me-2"></i>Add to Cart
+                            </button>
+                            <button type="button" class="btn btn-outline-danger btn-lg @(Model.IsInWishlist ? "active" : "")" onclick="toggleWishlist(@medicine.Id)">
+                                <i class="@(Model.IsInWishlist ? "fas" : "far") fa-heart"></i>
+                            </button>
+                        </div>
+                        }
+                        else
+                        {
+                        <div class="alert alert-info mb-4">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Admin View Mode:</strong> Cart and checkout are disabled for admin users. Use the Admin Dashboard for order management.
+                        </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            This product is currently unavailable.
+                            @if (!User.IsInRole("Admin") && !User.IsInRole("SuperAdmin"))
+                            {
+                            <button type="button" class="btn btn-sm btn-outline-primary ms-3" onclick="toggleWishlist(@medicine.Id)">
+                                <i class="@(Model.IsInWishlist ? "fas" : "far") fa-heart me-1"></i>Add to Wishlist
+                            </button>
+                            }
+                        </div>
+                    }
+
+                    <!-- Quick Info -->
+                    <div class="border-top pt-3">
+                        <div class="row small text-muted">
+                            <div class="col-auto">
+                                <i class="fas fa-truck me-1"></i>Free delivery on orders ≥₹500
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-shield-alt me-1"></i>100% Genuine Products
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-undo me-1"></i>Easy Returns
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Description & Details Tabs -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" data-bs-toggle="tab" href="#description">Description</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#details">Product Details</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#shipping">Shipping & Returns</a>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="tab-content">
+                <!-- Description Tab -->
+                <div class="tab-pane fade show active" id="description">
+                    @if (!string.IsNullOrEmpty(medicine.Description))
+                    {
+                        <p>@medicine.Description</p>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No description available for this product.</p>
+                    }
+                </div>
+
+                <!-- Details Tab -->
+                <div class="tab-pane fade" id="details">
+                    <table class="table table-borderless">
+                        <tbody>
+                            <tr>
+                                <td width="200" class="text-muted">Product Name</td>
+                                <td>@medicine.Name</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Generic Name</td>
+                                <td>@medicine.GenericName</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Manufacturer</td>
+                                <td>@medicine.Manufacturer</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Category</td>
+                                <td>@medicine.CategoryName</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Unit/Packaging</td>
+                                <td>@medicine.PackSize</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Batch Number</td>
+                                <td>@medicine.BatchNo</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Expiry Date</td>
+                                <td>@medicine.ExpiryDate.ToString("MMMM yyyy")</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">GST Rate</td>
+                                <td>@medicine.GSTPercent%</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Prescription Required</td>
+                                <td>@(medicine.RequiresPrescription ? "Yes" : "No")</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Shipping Tab -->
+                <div class="tab-pane fade" id="shipping">
+                    <h6>Shipping Information</h6>
+                    <ul>
+                        <li>Orders are typically processed within 1-2 business days</li>
+                        <li>Free shipping on orders of ₹500 or more</li>
+                        <li>Standard shipping: 3-5 business days</li>
+                        <li>Express shipping available at checkout</li>
+                    </ul>
+                    
+                    <h6 class="mt-4">Return Policy</h6>
+                    <ul>
+                        <li>Returns accepted within 7 days of delivery</li>
+                        <li>Product must be unopened and in original packaging</li>
+                        <li>Prescription medicines are non-returnable</li>
+                        <li>Contact customer support for return requests</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    @if (Model.RelatedMedicines != null && Model.RelatedMedicines.Any())
+    {
+        <div class="mt-5">
+            <h4 class="mb-4">Related Products</h4>
+            <div class="row">
+                @foreach (var related in Model.RelatedMedicines)
+                {
+                    <div class="col-6 col-md-3 mb-4">
+                        <div class="card h-100 product-card">
+                            <a asp-action="Details" asp-route-id="@related.Id" class="text-decoration-none">
+                                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
+                                    @if (!string.IsNullOrEmpty(related.ImageUrl))
+                                    {
+                                        <img src="@related.ImageUrl" alt="@related.Name" class="img-fluid" style="max-height: 140px;">
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-pills fa-3x text-muted"></i>
+                                    }
+                                </div>
+                                <div class="card-body">
+                                    <h6 class="card-title text-dark">@related.Name</h6>
+                                    <p class="text-primary mb-0"><strong>₹@related.SalePrice.ToString("N2")</strong></p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        var maxQty = @medicine.StockQty;
+
+        function incrementQty() {
+            var input = document.getElementById('quantity');
+            var value = parseInt(input.value) || 1;
+            if (value < maxQty) {
+                input.value = value + 1;
+            }
+        }
+
+        function decrementQty() {
+            var input = document.getElementById('quantity');
+            var value = parseInt(input.value) || 1;
+            if (value > 1) {
+                input.value = value - 1;
+            }
+        }
+
+        function addToCart(medicineId) {
+            var quantity = parseInt(document.getElementById('quantity').value) || 1;
+            $.ajax({
+                url: '/Cart/Add',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ medicineId: medicineId, quantity: quantity }),
+                success: function(result) {
+                    if (result.success) {
+                        updateCartCount(result.cartCount);
+                        showToast('Success', 'Product added to cart!', 'success');
+                    } else {
+                        showToast('Error', result.message || 'Failed to add to cart', 'error');
+                    }
+                },
+                error: function() {
+                    showToast('Error', 'Failed to add to cart', 'error');
+                }
+            });
+        }
+
+        function toggleWishlist(medicineId) {
+            $.post('/Wishlist/Toggle', { medicineId: medicineId }, function(result) {
+                if (result.success) {
+                    showToast('Success', result.message, 'success');
+                } else {
+                    showToast('Error', result.message || 'Failed to update wishlist', 'error');
+                }
+            });
+        }
+    </script>
+}

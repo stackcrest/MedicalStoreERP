@@ -1,0 +1,99 @@
+@model CategoryCreateViewModel
+@{
+    ViewData["Title"] = "Create Category";
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Create Category</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Categories</a></li>
+                    <li class="breadcrumb-item active">Create</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-folder-plus me-2"></i>Category Information</h3>
+                    </div>
+                    <form asp-action="Create" method="post">
+                        <div class="card-body">
+                            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                            <div class="mb-3">
+                                <label asp-for="Name" class="form-label">Category Name *</label>
+                                <input asp-for="Name" class="form-control" placeholder="Enter category name" required>
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Description" class="form-label">Description</label>
+                                <textarea asp-for="Description" class="form-control" rows="3" 
+                                          placeholder="Brief description of the category"></textarea>
+                                <span asp-validation-for="Description" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="ImageUrl" class="form-label">Image URL</label>
+                                <input asp-for="ImageUrl" class="form-control" placeholder="https://example.com/image.jpg">
+                                <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                                <small class="text-muted">Optional: Enter a URL for the category image</small>
+                            </div>
+
+                            <div class="form-check mb-3">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" checked>
+                                <label asp-for="IsActive" class="form-check-label">Active</label>
+                                <br>
+                                <small class="text-muted">Inactive categories won't be shown on the shop</small>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Create Category
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card bg-light">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-info-circle me-2"></i>Help</h3>
+                    </div>
+                    <div class="card-body">
+                        <h6>Creating a Category</h6>
+                        <p class="text-muted small">
+                            Categories help organize medicines for easier browsing and filtering.
+                        </p>
+                        <ul class="small text-muted">
+                            <li>Choose a clear, descriptive name</li>
+                            <li>Add a brief description for customers</li>
+                            <li>Optionally add an image URL</li>
+                            <li>Set as inactive to hide from shop</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

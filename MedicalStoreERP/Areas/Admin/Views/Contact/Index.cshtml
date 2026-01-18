@@ -1,0 +1,238 @@
+@model MedicalStoreERP.Models.ViewModels.PaginatedResult<MedicalStoreERP.Models.ContactMessage>
+@{
+    ViewData["Title"] = "Contact Messages";
+}
+
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1><i class="fas fa-envelope me-2"></i>Contact Messages</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-action="Index" asp-controller="Dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Contact Messages</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Stats Cards -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3 id="newCount">@Model.Items.Count(m => m.Status == MedicalStoreERP.Models.ContactStatus.New)</h3>
+                        <p>New Messages</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3 id="inProgressCount">@Model.Items.Count(m => m.Status == MedicalStoreERP.Models.ContactStatus.InProgress)</h3>
+                        <p>In Progress</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-spinner"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3 id="resolvedCount">@Model.Items.Count(m => m.Status == MedicalStoreERP.Models.ContactStatus.Resolved)</h3>
+                        <p>Resolved</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-secondary">
+                    <div class="inner">
+                        <h3>@Model.TotalCount</h3>
+                        <p>Total Messages</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-select" asp-items="ViewBag.Statuses">
+                            <option value="">All Statuses</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Category</label>
+                        <select name="category" class="form-select" asp-items="ViewBag.Categories">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Search</label>
+                        <input type="text" name="searchTerm" class="form-control" 
+                               value="@ViewBag.Search" placeholder="Search by name, email, subject...">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-1"></i>Filter
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Messages Table -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">All Messages</h3>
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-hover text-nowrap">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Subject</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Items.Any())
+                        {
+                            @foreach (var message in Model.Items)
+                            {
+                                var statusClass = message.Status switch
+                                {
+                                    MedicalStoreERP.Models.ContactStatus.New => "bg-info",
+                                    MedicalStoreERP.Models.ContactStatus.InProgress => "bg-warning",
+                                    MedicalStoreERP.Models.ContactStatus.Resolved => "bg-success",
+                                    MedicalStoreERP.Models.ContactStatus.Closed => "bg-secondary",
+                                    _ => "bg-secondary"
+                                };
+                                
+                                var categoryClass = message.Category switch
+                                {
+                                    MedicalStoreERP.Models.ContactCategory.Complaint => "text-danger",
+                                    MedicalStoreERP.Models.ContactCategory.OrderInquiry => "text-primary",
+                                    MedicalStoreERP.Models.ContactCategory.ReturnRefund => "text-warning",
+                                    _ => "text-muted"
+                                };
+                                
+                                <tr class="@(message.Status == MedicalStoreERP.Models.ContactStatus.New ? "table-light fw-bold" : "")">
+                                    <td>#@message.Id</td>
+                                    <td>
+                                        @message.Name
+                                        @if (message.UserId != null)
+                                        {
+                                            <span class="badge bg-primary ms-1" title="Registered User">
+                                                <i class="fas fa-user-check"></i>
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <a href="mailto:@message.Email" class="text-decoration-none">@message.Email</a>
+                                    </td>
+                                    <td>
+                                        @if (message.Subject.Length > 30)
+                                        {
+                                            @message.Subject.Substring(0, 30)<text>...</text>
+                                        }
+                                        else
+                                        {
+                                            @message.Subject
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="@categoryClass">@message.Category</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge @statusClass">@message.Status</span>
+                                    </td>
+                                    <td>@message.CreatedAt.ToString("MMM dd, yyyy HH:mm")</td>
+                                    <td>
+                                        <a asp-action="Details" asp-route-id="@message.Id" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center py-4">
+                                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">No messages found</p>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            
+            @if (Model.TotalPages > 1)
+            {
+                <div class="card-footer">
+                    <nav>
+                        <ul class="pagination justify-content-center mb-0">
+                            @if (Model.CurrentPage > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" asp-action="Index" 
+                                       asp-route-page="@(Model.CurrentPage - 1)"
+                                       asp-route-status="@ViewBag.Status"
+                                       asp-route-category="@ViewBag.Category"
+                                       asp-route-searchTerm="@ViewBag.Search">Previous</a>
+                                </li>
+                            }
+                            
+                            @for (int i = 1; i <= Model.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                    <a class="page-link" asp-action="Index" 
+                                       asp-route-page="@i"
+                                       asp-route-status="@ViewBag.Status"
+                                       asp-route-category="@ViewBag.Category"
+                                       asp-route-searchTerm="@ViewBag.Search">@i</a>
+                                </li>
+                            }
+                            
+                            @if (Model.CurrentPage < Model.TotalPages)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" asp-action="Index" 
+                                       asp-route-page="@(Model.CurrentPage + 1)"
+                                       asp-route-status="@ViewBag.Status"
+                                       asp-route-category="@ViewBag.Category"
+                                       asp-route-searchTerm="@ViewBag.Search">Next</a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                </div>
+            }
+        </div>
+    </div>
+</section>
