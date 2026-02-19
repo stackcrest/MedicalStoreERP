@@ -22,6 +22,8 @@
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <!-- Chart.js -->
     <link href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.css" rel="stylesheet">
+    <!-- Summernote WYSIWYG Editor -->
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-bs4.min.css" rel="stylesheet">
 
     <style>
         :root {
@@ -483,14 +485,116 @@
             .main-sidebar, .main-header, .main-footer {
                 display: none !important;
             }
-            
+
             .content-wrapper {
                 margin-left: 0 !important;
             }
-            
+
             .card {
                 box-shadow: none;
                 border: 1px solid #ddd;
+            }
+        }
+
+        /* ========== SUMMERNOTE WYSIWYG EDITOR STYLES ========== */
+        .note-editor.note-frame {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .note-editor .note-toolbar {
+            background: #f8f9fa;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 8px;
+        }
+
+        .note-editor .note-toolbar .btn {
+            border-radius: 6px;
+            padding: 0.375rem 0.5rem;
+        }
+
+        .note-editor .note-toolbar .btn:hover {
+            background: #e9ecef;
+        }
+
+        .note-editor .note-toolbar .btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .note-editor .note-editing-area {
+            background: white;
+        }
+
+        .note-editor .note-editable {
+            padding: 1rem;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .note-editor .note-editable h1,
+        .note-editor .note-editable h2,
+        .note-editor .note-editable h3,
+        .note-editor .note-editable h4 {
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+
+        .note-editor .note-editable p {
+            margin-bottom: 1rem;
+        }
+
+        .note-editor .note-editable blockquote {
+            border-left: 4px solid var(--primary-color);
+            padding-left: 1rem;
+            font-style: italic;
+            background: #f8f9fa;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .note-editor .note-editable img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .note-editor .note-editable ul,
+        .note-editor .note-editable ol {
+            padding-left: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .note-editor .note-editable li {
+            margin-bottom: 0.5rem;
+        }
+
+        .note-editor .note-statusbar {
+            background: #f8f9fa;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .note-modal .modal-dialog {
+            border-radius: 12px;
+        }
+
+        .note-modal .note-modal-content {
+            border-radius: 12px;
+        }
+
+        @@media (max-width: 575.98px) {
+            .note-editor .note-toolbar .btn {
+                padding: 0.25rem 0.375rem;
+                font-size: 0.875rem;
+            }
+
+            .note-editor .note-editable {
+                padding: 0.75rem;
+                font-size: 14px;
             }
         }
     </style>
@@ -636,6 +740,13 @@
                                 <p>Pending Orders</p>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a asp-controller="Returns" asp-action="Index" 
+                               class="nav-link @(currentController == "Returns" ? "active" : "")">
+                                <i class="nav-icon fas fa-undo-alt"></i>
+                                <p>Returns & Refunds</p>
+                            </a>
+                        </li>
 
                         <li class="nav-header">PROCUREMENT</li>
                         <li class="nav-item">
@@ -759,6 +870,8 @@
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Summernote WYSIWYG Editor -->
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-bs4.min.js"></script>
 
     <script>
         // Initialize DataTables

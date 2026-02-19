@@ -157,17 +157,35 @@
                     <!-- Image & Status -->
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title"><i class="fas fa-image me-2"></i>Image</h3>
+                            <h3 class="card-title"><i class="fas fa-image me-2"></i>Product Image</h3>
                         </div>
                         <div class="card-body">
-                            <div class="mb-3">
-                                <label asp-for="ImageUrl" class="form-label">Image URL</label>
-                                <input asp-for="ImageUrl" class="form-control" placeholder="https://...">
-                                <small class="text-muted">Enter the URL of the medicine image</small>
+                            <div class="text-center mb-3">
+                                <div class="position-relative d-inline-block" id="imagePreviewContainer">
+                                    <div id="imagePlaceholder" class="rounded shadow-sm d-flex align-items-center justify-content-center" style="width: 200px; height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                        <div class="text-center text-white">
+                                            <i class="fas fa-pills fa-3x mb-2 opacity-75"></i>
+                                            <div><small class="opacity-75">No Image</small></div>
+                                        </div>
+                                    </div>
+                                    <img id="imagePreview" src="" class="img-fluid rounded shadow-sm" style="max-height: 200px; min-height: 150px; object-fit: cover; display: none;">
+                                </div>
                             </div>
-                            <div class="text-center">
-                                <img id="imagePreview" src="https://via.placeholder.com/200x200?text=No+Image" 
-                                     class="img-fluid rounded" style="max-height: 200px;">
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Upload Image</label>
+                                <div class="input-group">
+                                    <input type="file" class="form-control" id="imageUpload" accept="image/*">
+                                    <button type="button" class="btn btn-primary" onclick="uploadMedicineImage()">
+                                        <i class="fas fa-upload"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted">Max 5MB. Allowed: JPG, PNG, GIF, WebP</small>
+                            </div>
+
+                            <div class="mb-0">
+                                <label asp-for="ImageUrl" class="form-label">Or Enter Image URL</label>
+                                <input asp-for="ImageUrl" class="form-control" placeholder="https://..." id="ImageUrl">
                             </div>
                         </div>
                     </div>
@@ -216,13 +234,72 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        // Image preview
+        // Image preview from URL
         $('#ImageUrl').on('input', function() {
             var url = $(this).val();
             if (url) {
-                $('#imagePreview').attr('src', url);
+                $('#imagePreview').attr('src', url).show();
+                $('#imagePlaceholder').hide();
             } else {
-                $('#imagePreview').attr('src', 'https://via.placeholder.com/200x200?text=No+Image');
+                $('#imagePreview').hide();
+                $('#imagePlaceholder').show();
+            }
+        });
+
+        // Upload image file
+        function uploadMedicineImage() {
+            var fileInput = document.getElementById('imageUpload');
+            if (!fileInput.files || !fileInput.files[0]) {
+                alert('Please select an image file first');
+                return;
+            }
+
+            var file = fileInput.files[0];
+            var formData = new FormData();
+            formData.append('file', file);
+
+            // Show loading state
+            var btn = event.target.closest('button');
+            var originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+
+            $.ajax({
+                url: '/Admin/Medicines/UploadImage',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        $('#ImageUrl').val(response.url);
+                        $('#imagePreview').attr('src', response.url).show();
+                        $('#imagePlaceholder').hide();
+                        fileInput.value = '';
+                    } else {
+                        alert('Upload failed: ' + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Upload failed: ' + error);
+                },
+                complete: function() {
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+                }
+            });
+        }
+
+        // Preview selected image before upload
+        $('#imageUpload').on('change', function() {
+            var file = this.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#imagePreview').attr('src', e.target.result).show();
+                    $('#imagePlaceholder').hide();
+                };
+                reader.readAsDataURL(file);
             }
         });
     </script>

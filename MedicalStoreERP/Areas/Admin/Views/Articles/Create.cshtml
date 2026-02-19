@@ -231,12 +231,86 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    
-    <!-- Include a WYSIWYG editor - using simple textarea with formatting for now -->
+
     <script>
         var links = [];
 
         $(document).ready(function() {
+            // Initialize Summernote rich text editor
+            $('#contentEditor').summernote({
+                height: 400,
+                minHeight: 300,
+                maxHeight: 600,
+                placeholder: 'Write your article content here...',
+                tabsize: 2,
+                focus: false,
+
+                // Toolbar configuration
+                toolbar: [
+                    ['style', ['style']],
+                    ['font', ['bold', 'italic', 'underline', 'strikethrough', 'clear']],
+                    ['fontname', ['fontname']],
+                    ['fontsize', ['fontsize']],
+                    ['color', ['color']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                    ['height', ['height']],
+                    ['table', ['table']],
+                    ['insert', ['link', 'picture', 'video', 'hr']],
+                    ['view', ['fullscreen', 'codeview', 'help']]
+                ],
+
+                // Style tags for headings dropdown
+                styleTags: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'pre'],
+
+                // Font sizes
+                fontSizes: ['8', '9', '10', '11', '12', '14', '16', '18', '20', '24', '28', '36', '48'],
+
+                // Colors palette
+                colors: [
+                    ['#000000', '#424242', '#636363', '#9C9C9C', '#CEC6CE', '#EFEFEF', '#F7F7F7', '#FFFFFF'],
+                    ['#FF0000', '#FF9C00', '#FFFF00', '#00FF00', '#00FFFF', '#0000FF', '#9C00FF', '#FF00FF'],
+                    ['#F7C6CE', '#FFE7CE', '#FFEFC6', '#D6EFD6', '#CEDEE7', '#CEE7F7', '#D6D6E7', '#E7D6DE'],
+                    ['#E79C9C', '#FFC69C', '#FFE79C', '#B5D6A5', '#A5C6CE', '#9CC6EF', '#B5A5D6', '#D6A5BD'],
+                    ['#2563EB', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16']
+                ],
+
+                // Callbacks
+                callbacks: {
+                    onImageUpload: function(files) {
+                        for (var i = 0; i < files.length; i++) {
+                            uploadSummernoteImage(files[i]);
+                        }
+                    }
+                }
+            });
+
+            // Image upload function for Summernote
+            function uploadSummernoteImage(file) {
+                var formData = new FormData();
+                formData.append('file', file);
+
+                $.ajax({
+                    url: '/Admin/Articles/UploadImage',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.success) {
+                            $('#contentEditor').summernote('insertImage', response.url, function($image) {
+                                $image.css('max-width', '100%');
+                                $image.addClass('img-fluid rounded');
+                            });
+                        } else {
+                            alert('Image upload failed: ' + response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert('Image upload failed: ' + error);
+                    }
+                });
+            }
+
             // Load existing links
             var existingLinks = '@Html.Raw(Model.ExternalLinks ?? "[]")';
             try {
@@ -261,8 +335,10 @@
                 }
             });
 
-            // Form submission - serialize links
+            // Form submission - serialize links and sync Summernote content
             $('#articleForm').on('submit', function() {
+                // Summernote syncs automatically, but ensure content is captured
+                $('#contentEditor').val($('#contentEditor').summernote('code'));
                 collectLinks();
                 $('#linksJson').val(JSON.stringify(links));
             });
@@ -276,11 +352,11 @@
         function addLinkRow(link) {
             var template = document.getElementById('linkTemplate').innerHTML;
             var $row = $(template);
-            
+
             if (link.title) $row.find('.link-title').val(link.title);
             if (link.url) $row.find('.link-url').val(link.url);
             if (link.type) $row.find('.link-type').val(link.type);
-            
+
             $('#linksContainer').append($row);
         }
 
@@ -295,7 +371,7 @@
                 var title = $(this).find('.link-title').val();
                 var url = $(this).find('.link-url').val();
                 var type = $(this).find('.link-type').val();
-                
+
                 if (title && url) {
                     links.push({ title: title, url: url, type: type });
                 }
@@ -336,12 +412,4 @@
             }
         }
     </script>
-
-    <style>
-        #contentEditor {
-            font-family: 'Segoe UI', monospace;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-    </style>
 }
