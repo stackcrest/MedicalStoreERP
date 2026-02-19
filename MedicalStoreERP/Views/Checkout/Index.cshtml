@@ -1,8 +1,8 @@
 @model CheckoutViewModel
-@inject Microsoft.Extensions.Options.IOptions<MedicalStoreERP.Services.StoreLocationSettings> StoreLocation
+@inject MedicalStoreERP.Services.IAppSettingsService AppSettings
 @{
     ViewData["Title"] = "Checkout";
-    var store = StoreLocation.Value;
+    var settings = AppSettings.GetCachedSettings();
 }
 
 <!-- Leaflet CSS for Map -->
@@ -89,8 +89,8 @@
                                 <i class="fas fa-map me-1 text-primary"></i>Select Your Delivery Location *
                             </label>
                             <p class="text-muted small mb-2">
-                                Click on the map or use the "Locate Me" button to set your delivery location. 
-                                We deliver within <strong>@store.MaxDeliveryRadiusKm km</strong> radius from our store.
+                                Click on the map or use the "Locate Me" button to set your delivery location.
+                                We deliver within <strong>@settings.MaxDeliveryRadiusKm km</strong> radius from our store.
                             </p>
                             
                             <!-- Delivery Status Banner -->
@@ -339,13 +339,13 @@
     <partial name="_ValidationScriptsPartial" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Store location from server
+        // Store location from server (reads from database settings)
         const storeLocation = {
-            lat: @store.Latitude,
-            lng: @store.Longitude,
-            maxRadius: @store.MaxDeliveryRadiusKm,
-            name: '@store.StoreName',
-            sameDayCutoff: @store.SameDayDeliveryCutoffHour
+            lat: @settings.StoreLatitude,
+            lng: @settings.StoreLongitude,
+            maxRadius: @settings.MaxDeliveryRadiusKm,
+            name: '@settings.AppName',
+            sameDayCutoff: @settings.SameDayDeliveryCutoffHour
         };
 
         let map, storeMarker, customerMarker, deliveryCircle;

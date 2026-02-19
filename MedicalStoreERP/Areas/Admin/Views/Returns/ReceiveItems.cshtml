@@ -1,0 +1,167 @@
+@model ProcessReturnViewModel
+@{
+    ViewData["Title"] = "Receive Return Items";
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Receive Return Items</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Returns</a></li>
+                    <li class="breadcrumb-item active">Receive Items</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <form asp-action="ReceiveItems" method="post">
+            <input type="hidden" name="ReturnRequestId" value="@Model.ReturnRequestId" />
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-box me-2"></i>Return @Model.ReturnRequest?.ReturnNumber - Items to Receive
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Review each item's condition and decide whether it can be returned to inventory for resale.
+                            </div>
+
+                            @for (int i = 0; i < Model.ItemsInventory.Count; i++)
+                            {
+                                var item = Model.ItemsInventory[i];
+                                <div class="card mb-3">
+                                    <div class="card-header bg-light">
+                                        <strong>@item.MedicineName</strong>
+                                        <span class="float-end">Batch: @item.BatchNo | Qty: @item.MaxQuantity</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <input type="hidden" name="ItemsInventory[@i].ReturnItemId" value="@item.ReturnItemId" />
+                                        <input type="hidden" name="ItemsInventory[@i].MedicineName" value="@item.MedicineName" />
+                                        <input type="hidden" name="ItemsInventory[@i].BatchNo" value="@item.BatchNo" />
+                                        <input type="hidden" name="ItemsInventory[@i].MaxQuantity" value="@item.MaxQuantity" />
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-check mb-3">
+                                                    <input type="checkbox" class="form-check-input" 
+                                                           id="resaleable_@i" 
+                                                           name="ItemsInventory[@i].IsResaleable" 
+                                                           value="true"
+                                                           checked="@item.IsResaleable"
+                                                           onchange="toggleInventoryOptions(@i, this.checked)">
+                                                    <label class="form-check-label" for="resaleable_@i">
+                                                        <strong>Item is in resaleable condition</strong>
+                                                    </label>
+                                                </div>
+
+                                                <div id="inventoryOptions_@i">
+                                                    <div class="form-check mb-2">
+                                                        <input type="checkbox" class="form-check-input" 
+                                                               id="returnToInventory_@i" 
+                                                               name="ItemsInventory[@i].ReturnToInventory" 
+                                                               value="true"
+                                                               checked="@item.ReturnToInventory">
+                                                        <label class="form-check-label" for="returnToInventory_@i">
+                                                            Return to inventory
+                                                        </label>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Quantity to return to stock</label>
+                                                        <input type="number" class="form-control" 
+                                                               name="ItemsInventory[@i].QuantityToReturn" 
+                                                               value="@item.MaxQuantity" 
+                                                               min="0" max="@item.MaxQuantity"
+                                                               style="width: 100px;">
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Condition Notes</label>
+                                                    <input type="text" class="form-control" 
+                                                           name="ItemsInventory[@i].ConditionNotes" 
+                                                           placeholder="e.g., Good condition, Damaged packaging, etc.">
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label">Inventory Notes</label>
+                                                    <input type="text" class="form-control" 
+                                                           name="ItemsInventory[@i].InventoryNotes" 
+                                                           placeholder="e.g., Added back to shelf A3">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-sticky-note me-2"></i>Additional Notes</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Admin Notes</label>
+                                <textarea class="form-control" name="AdminNotes" rows="4" 
+                                          placeholder="Any additional notes about the received items..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h5>Return Summary</h5>
+                            <p class="mb-1"><strong>Return #:</strong> @Model.ReturnRequest?.ReturnNumber</p>
+                            <p class="mb-1"><strong>Customer:</strong> @Model.ReturnRequest?.CustomerName</p>
+                            <p class="mb-1"><strong>Items:</strong> @Model.ItemsInventory.Count</p>
+                            <p class="mb-0"><strong>Return Amount:</strong> ₹@(Model.ReturnRequest?.TotalReturnAmount.ToString("N2") ?? "0.00")</p>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-check me-2"></i>Confirm Items Received
+                        </button>
+                        <a asp-action="Details" asp-route-id="@Model.ReturnRequestId" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        function toggleInventoryOptions(index, isResaleable) {
+            var optionsDiv = document.getElementById('inventoryOptions_' + index);
+            if (isResaleable) {
+                optionsDiv.style.display = 'block';
+            } else {
+                optionsDiv.style.display = 'none';
+                // Uncheck return to inventory
+                document.getElementById('returnToInventory_' + index).checked = false;
+            }
+        }
+    </script>
+}

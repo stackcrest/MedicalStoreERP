@@ -31,6 +31,8 @@ namespace MedicalStoreERP.Data
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<ContactMessage> ContactMessages { get; set; }
         public DbSet<AppSetting> AppSettings { get; set; }
+        public DbSet<ReturnRequest> ReturnRequests { get; set; }
+        public DbSet<ReturnItem> ReturnItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -203,6 +205,91 @@ namespace MedicalStoreERP.Data
                 .WithMany()
                 .HasForeignKey(i => i.MedicineId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // ReturnRequest configurations
+            builder.Entity<ReturnRequest>()
+                .HasIndex(r => r.ReturnNumber)
+                .IsUnique();
+
+            builder.Entity<ReturnRequest>()
+                .HasIndex(r => r.OrderId);
+
+            builder.Entity<ReturnRequest>()
+                .HasIndex(r => r.UserId);
+
+            builder.Entity<ReturnRequest>()
+                .HasIndex(r => r.Status);
+
+            builder.Entity<ReturnRequest>()
+                .HasOne(r => r.Order)
+                .WithMany()
+                .HasForeignKey(r => r.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ReturnRequest>()
+                .HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ReturnRequest>()
+                .HasOne(r => r.ApprovedByUser)
+                .WithMany()
+                .HasForeignKey(r => r.ApprovedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ReturnRequest>()
+                .HasOne(r => r.ReceivedByUser)
+                .WithMany()
+                .HasForeignKey(r => r.ReceivedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ReturnRequest>()
+                .HasOne(r => r.RefundProcessedByUser)
+                .WithMany()
+                .HasForeignKey(r => r.RefundProcessedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ReturnRequest>()
+                .Property(r => r.TotalReturnAmount)
+                .HasPrecision(18, 2);
+
+            builder.Entity<ReturnRequest>()
+                .Property(r => r.RefundedAmount)
+                .HasPrecision(18, 2);
+
+            // ReturnItem configurations
+            builder.Entity<ReturnItem>()
+                .HasOne(ri => ri.ReturnRequest)
+                .WithMany(r => r.ReturnItems)
+                .HasForeignKey(ri => ri.ReturnRequestId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<ReturnItem>()
+                .HasOne(ri => ri.OrderItem)
+                .WithMany()
+                .HasForeignKey(ri => ri.OrderItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ReturnItem>()
+                .HasOne(ri => ri.Medicine)
+                .WithMany()
+                .HasForeignKey(ri => ri.MedicineId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ReturnItem>()
+                .HasOne(ri => ri.ReturnedToInventoryByUser)
+                .WithMany()
+                .HasForeignKey(ri => ri.ReturnedToInventoryByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ReturnItem>()
+                .Property(ri => ri.UnitPrice)
+                .HasPrecision(18, 2);
+
+            builder.Entity<ReturnItem>()
+                .Property(ri => ri.TotalPrice)
+                .HasPrecision(18, 2);
         }
     }
 }

@@ -598,5 +598,50 @@ namespace MedicalStoreERP.Areas.Admin.Controllers
             var trimmed = value.Trim().ToLower();
             return trimmed == "yes" || trimmed == "y" || trimmed == "true" || trimmed == "1";
         }
+
+        [HttpPost]
+        public async Task<IActionResult> UploadImage(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return Json(new { success = false, message = "No file uploaded" });
+            }
+
+            try
+            {
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+                var extension = Path.GetExtension(file.FileName).ToLower();
+
+                if (!allowedExtensions.Contains(extension))
+                {
+                    return Json(new { success = false, message = "Invalid file type. Allowed: " + string.Join(", ", allowedExtensions) });
+                }
+
+                // Check file size (max 5MB)
+                if (file.Length > 5 * 1024 * 1024)
+                {
+                    return Json(new { success = false, message = "File size must be less than 5MB" });
+                }
+
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "medicines");
+                Directory.CreateDirectory(uploadsFolder);
+
+                var uniqueFileName = $"{Guid.NewGuid()}{extension}";
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                var url = $"/uploads/medicines/{uniqueFileName}";
+                return Json(new { success = true, url = url });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error uploading medicine image");
+                return Json(new { success = false, message = $"Upload failed: {ex.Message}" });
+            }
+        }
     }
 }
