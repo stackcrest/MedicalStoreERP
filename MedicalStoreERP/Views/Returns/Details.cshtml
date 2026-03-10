@@ -1,0 +1,281 @@
+@model ReturnRequestViewModel
+@{
+    ViewData["Title"] = $"Return {Model.ReturnNumber}";
+}
+
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">My Returns</a></li>
+            <li class="breadcrumb-item active">@Model.ReturnNumber</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Status Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-undo-alt me-2"></i>Return #@Model.ReturnNumber
+                    </h5>
+                    <span class="badge bg-@Model.StatusBadgeClass badge-lg">@Model.StatusDisplay</span>
+                </div>
+                <div class="card-body">
+                    <!-- Progress Timeline -->
+                    @if (Model.Status != ReturnStatus.Rejected && Model.Status != ReturnStatus.Cancelled)
+                    {
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between position-relative">
+                                @{
+                                    var steps = new[] {
+                                        ("Submitted", Model.CreatedAt, true, "paper-plane"),
+                                        ("Approved", Model.ApprovedAt, Model.Status >= ReturnStatus.Approved, "check"),
+                                        ("Items Received", Model.ItemsReceivedAt, Model.Status >= ReturnStatus.ItemsReceived, "box"),
+                                        ("Refund Processed", Model.RefundProcessedAt, Model.Status >= ReturnStatus.RefundProcessed, "money-bill-wave"),
+                                        ("Completed", Model.CompletedAt, Model.Status == ReturnStatus.Completed, "check-double")
+                                    };
+                                }
+                                @foreach (var (label, date, isCompleted, icon) in steps)
+                                {
+                                    <div class="text-center" style="flex: 1;">
+                                        <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center 
+                                            @(isCompleted ? "bg-success text-white" : "bg-light border")"
+                                            style="width: 50px; height: 50px;">
+                                            <i class="fas fa-@icon @(isCompleted ? "" : "text-muted")"></i>
+                                        </div>
+                                        <small class="d-block @(isCompleted ? "text-success fw-bold" : "text-muted")">@label</small>
+                                        @if (date.HasValue)
+                                        {
+                                            <small class="text-muted d-block">@date.Value.ToString("dd MMM")</small>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    @if (Model.Status == ReturnStatus.Rejected)
+                    {
+                        <div class="alert alert-danger">
+                            <h6 class="alert-heading"><i class="fas fa-times-circle me-2"></i>Return Request Rejected</h6>
+                            <p class="mb-0">@Model.CancellationReason</p>
+                        </div>
+                    }
+
+                    @if (Model.Status == ReturnStatus.Cancelled)
+                    {
+                        <div class="alert alert-secondary">
+                            <h6 class="alert-heading"><i class="fas fa-ban me-2"></i>Return Cancelled</h6>
+                            <p class="mb-0">@(Model.CancellationReason ?? "You cancelled this return request.")</p>
+                        </div>
+                    }
+
+                    @if (Model.Status == ReturnStatus.Approved)
+                    {
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Next Step</h6>
+                            <p class="mb-0">Your return has been approved. Please ship the items back to us. We'll process your refund once we receive them.</p>
+                        </div>
+                    }
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">Return Details</h6>
+                            <p class="mb-2"><strong>Reason:</strong> @Model.ReasonDisplay</p>
+                            @if (!string.IsNullOrEmpty(Model.ReasonDetails))
+                            {
+                                <p class="mb-2"><strong>Details:</strong> @Model.ReasonDetails</p>
+                            }
+                            <p class="mb-2"><strong>Submitted:</strong> @Model.CreatedAt.ToString("dd MMM yyyy, hh:mm tt")</p>
+                            <p class="mb-0"><strong>Refund Method:</strong> @Model.RefundMethodDisplay</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">Related Order</h6>
+                            <p class="mb-2">
+                                <strong>Order #:</strong>
+                                <a asp-controller="Orders" asp-action="Details" asp-route-id="@Model.OrderId">@Model.OrderNumber</a>
+                            </p>
+                            <p class="mb-2"><strong>Order Date:</strong> @Model.OrderDate.ToString("dd MMM yyyy")</p>
+                            <p class="mb-0"><strong>Order Total:</strong> ₹@Model.OrderTotalAmount.ToString("N2")</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-pills me-2"></i>Return Items</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Item</th>
+                                    <th class="text-center">Quantity</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.Items)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                                {
+                                                    <img src="@item.ImageUrl" class="rounded me-3" width="50" height="50" style="object-fit: cover;">
+                                                }
+                                                else
+                                                {
+                                                    <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                                        <i class="fas fa-pills text-muted"></i>
+                                                    </div>
+                                                }
+                                                <div>
+                                                    <h6 class="mb-0">@item.MedicineName</h6>
+                                                    <small class="text-muted">Batch: @item.BatchNo</small>
+                                                    @if (!string.IsNullOrEmpty(item.Reason))
+                                                    {
+                                                        <br><small class="text-muted fst-italic">@item.Reason</small>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center align-middle">@item.Quantity</td>
+                                        <td class="text-end align-middle">₹@item.UnitPrice.ToString("N2")</td>
+                                        <td class="text-end align-middle">₹@item.TotalPrice.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Return Total:</strong></td>
+                                    <td class="text-end"><strong>₹@Model.TotalReturnAmount.ToString("N2")</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.CustomerNotes))
+            {
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="fas fa-comment me-2"></i>Your Notes</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0">@Model.CustomerNotes</p>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Amount Summary -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-rupee-sign me-2"></i>Refund Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Return Amount:</span>
+                        <strong>₹@Model.TotalReturnAmount.ToString("N2")</strong>
+                    </div>
+                    @if (Model.RefundedAmount > 0)
+                    {
+                        <hr>
+                        <div class="d-flex justify-content-between text-success">
+                            <span><i class="fas fa-check-circle me-1"></i>Refunded:</span>
+                            <strong>₹@Model.RefundedAmount.ToString("N2")</strong>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.RefundTransactionId))
+                        {
+                            <small class="text-muted d-block mt-2">
+                                Transaction ID: @Model.RefundTransactionId
+                            </small>
+                        }
+                        @if (Model.RefundProcessedAt.HasValue)
+                        {
+                            <small class="text-muted d-block">
+                                Processed on @Model.RefundProcessedAt.Value.ToString("dd MMM yyyy")
+                            </small>
+                        }
+                    }
+                </div>
+            </div>
+
+            <!-- Actions -->
+            @if (Model.Status == ReturnStatus.Pending)
+            {
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Your return request is being reviewed. You can cancel it if you change your mind.
+                        </p>
+                        <button type="button" class="btn btn-outline-danger w-100" onclick="confirmCancel(@Model.Id)">
+                            <i class="fas fa-times me-2"></i>Cancel Return Request
+                        </button>
+                    </div>
+                </div>
+            }
+
+            <!-- Help Card -->
+            <div class="card shadow-sm bg-light">
+                <div class="card-body">
+                    <h6><i class="fas fa-question-circle me-2"></i>Need Help?</h6>
+                    <p class="small text-muted mb-2">
+                        If you have any questions about your return, please contact our support team.
+                    </p>
+                    <a href="@Url.Action("Contact", "Home")" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-headset me-2"></i>Contact Support
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="Cancel" method="post">
+                <input type="hidden" id="cancelReturnId" name="id" />
+                <div class="modal-header">
+                    <h5 class="modal-title">Cancel Return Request</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to cancel this return request?</p>
+                    <div class="mb-3">
+                        <label class="form-label">Reason (Optional)</label>
+                        <textarea class="form-control" name="reason" rows="3" placeholder="Why are you cancelling?"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, Keep It</button>
+                    <button type="submit" class="btn btn-danger">Yes, Cancel Return</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmCancel(returnId) {
+            document.getElementById('cancelReturnId').value = returnId;
+            var modal = new bootstrap.Modal(document.getElementById('cancelModal'));
+            modal.show();
+        }
+    </script>
+}

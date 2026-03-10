@@ -31,8 +31,22 @@
                     }
                     else
                     {
-                        <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 400px;">
-                            <i class="fas fa-pills fa-5x text-muted"></i>
+                        var detailGradients = new[] {
+                            "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                            "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
+                            "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+                            "linear-gradient(135deg, #fa709a 0%, #fee140 100%)"
+                        };
+                        var detailIcons = new[] { "fa-pills", "fa-capsules", "fa-tablets", "fa-prescription-bottle" };
+                        var detailIndex = Math.Abs(medicine.Id.GetHashCode()) % detailGradients.Length;
+                        <div class="d-flex align-items-center justify-content-center rounded position-relative overflow-hidden" style="height: 400px; background: @detailGradients[detailIndex];">
+                            <div class="text-center text-white">
+                                <i class="fas @detailIcons[detailIndex] fa-5x mb-3 opacity-75"></i>
+                                <h4 class="mb-1 opacity-90">@medicine.Name</h4>
+                                <p class="mb-0 opacity-75">@medicine.CategoryName</p>
+                            </div>
+                            <div class="position-absolute" style="top: -50px; right: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+                            <div class="position-absolute" style="bottom: -80px; left: -80px; width: 300px; height: 300px; background: rgba(255,255,255,0.08); border-radius: 50%;"></div>
                         </div>
                     }
                 </div>

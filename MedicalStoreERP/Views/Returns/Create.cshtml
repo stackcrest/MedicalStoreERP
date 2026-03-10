@@ -1,0 +1,299 @@
+@model CreateReturnRequestViewModel
+@{
+    ViewData["Title"] = "Request a Return";
+}
+
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Orders" asp-action="Index">My Orders</a></li>
+            <li class="breadcrumb-item active">Request Return</li>
+        </ol>
+    </nav>
+
+    <h2 class="mb-4"><i class="fas fa-undo-alt me-2"></i>Request a Return</h2>
+
+    <form asp-action="Create" method="post">
+        <input type="hidden" name="OrderId" value="@Model.OrderId" />
+
+        <div class="row">
+            <!-- Main Form -->
+            <div class="col-lg-8">
+                <!-- Order Info -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Order Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Order #:</strong> @Model.Order?.OrderNumber</p>
+                                <p class="mb-0"><strong>Order Date:</strong> @Model.Order?.OrderDate.ToString("dd MMM yyyy")</p>
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                <p class="mb-1"><strong>Order Total:</strong> ₹@Model.Order?.TotalAmount.ToString("N2")</p>
+                                <p class="mb-0"><strong>Delivered:</strong> @Model.Order?.DeliveredAt?.ToString("dd MMM yyyy")</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Select Items -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-pills me-2"></i>Select Items to Return</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Select the items you want to return and specify the quantity for each.
+                        </div>
+
+                        @for (int i = 0; i < Model.Items.Count; i++)
+                        {
+                            var item = Model.Items[i];
+                            <div class="card mb-3 item-card" data-index="@i">
+                                <div class="card-body">
+                                    <input type="hidden" name="Items[@i].OrderItemId" value="@item.OrderItemId" />
+                                    <input type="hidden" name="Items[@i].MedicineId" value="@item.MedicineId" />
+                                    <input type="hidden" name="Items[@i].MedicineName" value="@item.MedicineName" />
+                                    <input type="hidden" name="Items[@i].BatchNo" value="@item.BatchNo" />
+                                    <input type="hidden" name="Items[@i].MaxQuantity" value="@item.MaxQuantity" />
+                                    <input type="hidden" name="Items[@i].UnitPrice" value="@item.UnitPrice" />
+
+                                    <div class="row align-items-center">
+                                        <div class="col-md-1">
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input item-checkbox" 
+                                                       name="Items[@i].Selected" value="true"
+                                                       id="item_@i" onchange="toggleItem(@i)">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <label for="item_@i" class="mb-0 cursor-pointer">
+                                                <h6 class="mb-1">@item.MedicineName</h6>
+                                                <small class="text-muted">Batch: @item.BatchNo | Unit Price: ₹@item.UnitPrice.ToString("N2")</small>
+                                            </label>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label small">Return Quantity</label>
+                                            <input type="number" class="form-control item-qty" 
+                                                   name="Items[@i].Quantity" 
+                                                   value="@item.MaxQuantity" 
+                                                   min="1" max="@item.MaxQuantity"
+                                                   data-max="@item.MaxQuantity"
+                                                   data-price="@item.UnitPrice"
+                                                   disabled
+                                                   onchange="calculateTotal()">
+                                            <small class="text-muted">Max: @item.MaxQuantity</small>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label small">Reason (Optional)</label>
+                                            <input type="text" class="form-control item-reason" 
+                                                   name="Items[@i].Reason" 
+                                                   placeholder="e.g., Damaged"
+                                                   disabled>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Return Reason -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-question-circle me-2"></i>Return Reason</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Primary Reason <span class="text-danger">*</span></label>
+                            <select class="form-select" name="Reason" required>
+                                <option value="">Select a reason</option>
+                                <option value="@((int)ReturnReason.Damaged)">Damaged product</option>
+                                <option value="@((int)ReturnReason.WrongItem)">Wrong item received</option>
+                                <option value="@((int)ReturnReason.NotAsDescribed)">Not as described</option>
+                                <option value="@((int)ReturnReason.Expired)">Product expired</option>
+                                <option value="@((int)ReturnReason.QualityIssue)">Quality issue</option>
+                                <option value="@((int)ReturnReason.AllergyReaction)">Allergy/Adverse reaction</option>
+                                <option value="@((int)ReturnReason.DoctorAdvice)">Doctor advised to stop</option>
+                                <option value="@((int)ReturnReason.Other)">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Additional Details</label>
+                            <textarea class="form-control" name="ReasonDetails" rows="3" 
+                                      placeholder="Please provide more details about why you want to return these items..."></textarea>
+                        </div>
+
+                        <div class="mb-0">
+                            <label class="form-label">Additional Notes</label>
+                            <textarea class="form-control" name="CustomerNotes" rows="2" 
+                                      placeholder="Any other information you'd like us to know..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Refund Method -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Refund Method</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">How would you like to receive your refund?</label>
+                            <select class="form-select" name="PreferredRefundMethod" id="refundMethod" onchange="toggleRefundFields()">
+                                <option value="@((int)RefundMethod.OriginalPaymentMethod)">Original Payment Method</option>
+                                <option value="@((int)RefundMethod.StoreCredit)">Store Credit</option>
+                                <option value="@((int)RefundMethod.BankTransfer)">Bank Transfer</option>
+                                <option value="@((int)RefundMethod.UPI)">UPI</option>
+                            </select>
+                        </div>
+
+                        <!-- Bank Details -->
+                        <div id="bankDetails" style="display: none;">
+                            <hr>
+                            <h6>Bank Account Details</h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Account Holder Name</label>
+                                    <input type="text" class="form-control" name="BankAccountName" placeholder="Name as per bank records">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Account Number</label>
+                                    <input type="text" class="form-control" name="BankAccountNumber" placeholder="Your bank account number">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">IFSC Code</label>
+                                    <input type="text" class="form-control" name="BankIFSC" placeholder="e.g., SBIN0001234">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- UPI Details -->
+                        <div id="upiDetails" style="display: none;">
+                            <hr>
+                            <h6>UPI Details</h6>
+                            <div class="mb-3">
+                                <label class="form-label">UPI ID</label>
+                                <input type="text" class="form-control" name="UPIId" placeholder="e.g., yourname@upi">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar - Summary -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm sticky-top" style="top: 20px;">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-calculator me-2"></i>Return Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="selectedItemsList">
+                            <p class="text-muted text-center py-3">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Select items to return
+                            </p>
+                        </div>
+
+                        <hr>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Items Selected:</span>
+                            <strong id="totalItems">0</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Estimated Refund:</span>
+                            <strong class="text-success fs-5" id="totalRefund">₹0.00</strong>
+                        </div>
+
+                        <div class="alert alert-warning small mb-3">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            Final refund amount may vary based on item condition and return policy.
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 btn-lg" id="submitBtn" disabled>
+                            <i class="fas fa-paper-plane me-2"></i>Submit Return Request
+                        </button>
+
+                        <a asp-controller="Orders" asp-action="Details" asp-route-id="@Model.OrderId" 
+                           class="btn btn-outline-secondary w-100 mt-2">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleItem(index) {
+            var checkbox = document.getElementById('item_' + index);
+            var card = document.querySelector('.item-card[data-index="' + index + '"]');
+            var qtyInput = card.querySelector('.item-qty');
+            var reasonInput = card.querySelector('.item-reason');
+
+            if (checkbox.checked) {
+                card.classList.add('border-primary');
+                qtyInput.disabled = false;
+                reasonInput.disabled = false;
+            } else {
+                card.classList.remove('border-primary');
+                qtyInput.disabled = true;
+                reasonInput.disabled = true;
+            }
+            calculateTotal();
+        }
+
+        function calculateTotal() {
+            var totalItems = 0;
+            var totalRefund = 0;
+            var selectedList = '';
+
+            document.querySelectorAll('.item-checkbox:checked').forEach(function(checkbox) {
+                var card = checkbox.closest('.item-card');
+                var qty = parseInt(card.querySelector('.item-qty').value) || 0;
+                var price = parseFloat(card.querySelector('.item-qty').dataset.price) || 0;
+                var name = card.querySelector('h6').textContent;
+
+                totalItems++;
+                var itemTotal = qty * price;
+                totalRefund += itemTotal;
+
+                selectedList += '<div class="d-flex justify-content-between mb-1">' +
+                    '<small>' + name + ' x' + qty + '</small>' +
+                    '<small>₹' + itemTotal.toFixed(2) + '</small>' +
+                    '</div>';
+            });
+
+            document.getElementById('totalItems').textContent = totalItems;
+            document.getElementById('totalRefund').textContent = '₹' + totalRefund.toFixed(2);
+
+            if (selectedList) {
+                document.getElementById('selectedItemsList').innerHTML = selectedList;
+                document.getElementById('submitBtn').disabled = false;
+            } else {
+                document.getElementById('selectedItemsList').innerHTML = 
+                    '<p class="text-muted text-center py-3"><i class="fas fa-info-circle me-1"></i>Select items to return</p>';
+                document.getElementById('submitBtn').disabled = true;
+            }
+        }
+
+        function toggleRefundFields() {
+            var method = document.getElementById('refundMethod').value;
+            document.getElementById('bankDetails').style.display = (method == '@((int)RefundMethod.BankTransfer)') ? 'block' : 'none';
+            document.getElementById('upiDetails').style.display = (method == '@((int)RefundMethod.UPI)') ? 'block' : 'none';
+        }
+    </script>
+}
+
+<style>
+    .cursor-pointer { cursor: pointer; }
+    .item-card.border-primary { border-color: #0d6efd !important; border-width: 2px; }
+</style>

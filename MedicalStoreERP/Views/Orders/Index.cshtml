@@ -79,8 +79,11 @@
                                     </a>
                                     @if (order.Status == OrderStatus.Delivered)
                                     {
-                                        <a asp-action="Invoice" asp-route-id="@order.Id" class="btn btn-outline-secondary btn-sm">
+                                        <a asp-action="Invoice" asp-route-id="@order.Id" class="btn btn-outline-secondary btn-sm me-2">
                                             <i class="fas fa-file-invoice me-1"></i>Invoice
+                                        </a>
+                                        <a asp-controller="Returns" asp-action="Create" asp-route-orderId="@order.Id" class="btn btn-outline-warning btn-sm">
+                                            <i class="fas fa-undo me-1"></i>Return
                                         </a>
                                     }
                                     @if (order.Status == OrderStatus.Pending)

@@ -36,10 +36,12 @@ namespace MedicalStoreERP.Services
     public class ArticleService : IArticleService
     {
         private readonly ApplicationDbContext _context;
+        private readonly IHtmlSanitizerService _htmlSanitizer;
 
-        public ArticleService(ApplicationDbContext context)
+        public ArticleService(ApplicationDbContext context, IHtmlSanitizerService htmlSanitizer)
         {
             _context = context;
+            _htmlSanitizer = htmlSanitizer;
         }
 
         public async Task<ArticleListViewModel> GetArticlesAsync(string? category, string? search, int page = 1, int pageSize = 10)
@@ -196,7 +198,7 @@ namespace MedicalStoreERP.Services
                 {
                     Title = model.Title,
                     Summary = model.Summary,
-                    Content = model.Content,
+                    Content = _htmlSanitizer.Sanitize(model.Content),
                     FeaturedImageUrl = model.FeaturedImageUrl,
                     VideoUrl = model.VideoUrl,
                     Category = model.Category,
@@ -246,7 +248,7 @@ namespace MedicalStoreERP.Services
 
                 article.Title = model.Title;
                 article.Summary = model.Summary;
-                article.Content = model.Content;
+                article.Content = _htmlSanitizer.Sanitize(model.Content);
                 article.FeaturedImageUrl = model.FeaturedImageUrl;
                 article.VideoUrl = model.VideoUrl;
                 article.Category = model.Category;

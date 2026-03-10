@@ -117,8 +117,31 @@
                             <div class="card product-card h-100">
                                 <div class="position-relative">
                                     <a asp-action="Details" asp-route-id="@medicine.Id">
-                                        <img src="@(medicine.ImageUrl ?? "https://via.placeholder.com/300x200?text=" + Uri.EscapeDataString(medicine.Name))" 
-                                             class="card-img-top" alt="@medicine.Name">
+                                        @if (!string.IsNullOrEmpty(medicine.ImageUrl))
+                                        {
+                                            <img src="@medicine.ImageUrl" class="card-img-top" alt="@medicine.Name" style="height: 200px; object-fit: cover;">
+                                        }
+                                        else
+                                        {
+                                            var medGradients = new[] {
+                                                "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                                "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
+                                                "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+                                                "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+                                                "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
+                                                "linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)"
+                                            };
+                                            var medIcons = new[] { "fa-pills", "fa-capsules", "fa-tablets", "fa-prescription-bottle", "fa-syringe", "fa-first-aid" };
+                                            var medIndex = Math.Abs(medicine.Id.GetHashCode()) % medGradients.Length;
+                                            <div class="card-img-top d-flex align-items-center justify-content-center" style="height: 200px; background: @medGradients[medIndex];">
+                                                <div class="text-center text-white">
+                                                    <i class="fas @medIcons[medIndex] fa-3x mb-2 opacity-75"></i>
+                                                    <div class="px-2">
+                                                        <small class="d-block text-truncate opacity-75" style="max-width: 150px;">@medicine.Name</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
                                     </a>
                                     @if (medicine.DiscountPercent > 0)
                                     {
